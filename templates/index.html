@@ -1,0 +1,327 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="flex flex-col items-center justify-center space-y-10">
+    <!-- Hero Section -->
+    <div class="text-center space-y-6 max-w-3xl mx-auto animate-fade-in-down">
+        <div
+            class="inline-flex items-center px-3 py-1 rounded-full border border-indigo-500/30 bg-indigo-500/10 text-indigo-300 text-xs font-medium mb-2">
+            <span class="flex h-2 w-2 rounded-full bg-indigo-400 mr-2 animate-pulse"></span>
+            Powered by Gemini
+        </div>
+        <h1 class="text-5xl md:text-7xl font-bold tracking-tight text-white mb-4">
+            Justice <span
+                class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400">Simplified</span>.
+        </h1>
+        <p class="text-xl text-slate-400 max-w-2xl mx-auto leading-relaxed">
+            Navigate the complexities of Indian Law, BNS, and the Constitution with confidence.
+        </p>
+    </div>
+
+    <!-- Chat Container -->
+    <div
+        class="w-full glass rounded-3xl overflow-hidden shadow-2xl shadow-black/50 ring-1 ring-white/10 animate-fade-in-up delay-100 relative">
+        <!-- Glow backing -->
+        <div class="absolute -top-40 -right-40 w-80 h-80 bg-purple-500/20 rounded-full blur-3xl pointer-events-none">
+        </div>
+        <div class="absolute -bottom-40 -left-40 w-80 h-80 bg-indigo-500/20 rounded-full blur-3xl pointer-events-none">
+        </div>
+
+        <!-- Chat History -->
+        <div id="chat-history"
+            class="h-[500px] overflow-y-auto p-8 space-y-6 scroll-smooth relative z-10 custom-scrollbar">
+            <!-- Initial Welcome Message -->
+            <div class="flex justify-start">
+                <div class="flex gap-4 max-w-3xl">
+                    <div
+                        class="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg flex-shrink-0">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none"
+                            viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        </svg>
+                    </div>
+                    <div
+                        class="glass bg-slate-800/50 text-slate-200 rounded-2xl rounded-tl-none px-6 py-4 shadow-sm border-0">
+                        <p>Namaste! I'm NyayaSetu, your AI legal companion.</p>
+                        <p class="mt-2 text-sm text-slate-400">You can ask me about:</p>
+                        <ul class="list-disc list-inside mt-1 text-sm text-slate-400 space-y-1">
+                            <li>Fundamental Rights in the Constitution</li>
+                            <li>Changes in the new Bharatiya Nyaya Sanhita</li>
+                            <li>Legal procedures for common issues</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Input Area -->
+        <div class="p-6 bg-slate-900/60 backdrop-blur-md border-t border-white/5 relative z-20">
+            <form id="chat-form" class="relative max-w-4xl mx-auto">
+                <div class="relative group">
+                    <div
+                        class="absolute -inset-0.5 bg-gradient-to-r from-pink-600 to-purple-600 rounded-xl opacity-20 group-hover:opacity-40 transition duration-500 blur">
+                    </div>
+                    <div class="relative flex items-center bg-slate-950 rounded-xl">
+                        <input type="text" id="user-input" name="message"
+                            class="w-full bg-transparent text-white placeholder-slate-500 pl-6 pr-32 py-4 border-none focus:ring-0 text-lg"
+                            placeholder="Describe your legal query..." required autocomplete="off">
+
+                        <!-- Actions -->
+                        <div class="absolute right-2 flex items-center gap-2">
+                            <button type="button" id="voice-btn"
+                                class="p-2 text-slate-400 hover:text-indigo-400 transition-colors rounded-lg hover:bg-white/5"
+                                title="Voice Input">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                                    stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                                </svg>
+                            </button>
+                            <span id="listening-indicator" class="hidden flex h-3 w-3 relative">
+                                <span
+                                    class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                <span class="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+                            </span>
+                            <button type="submit"
+                                class="bg-indigo-600 hover:bg-indigo-500 text-white p-3 rounded-lg shadow-lg shadow-indigo-500/30 transition-all transform active:scale-95">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20"
+                                    fill="currentColor">
+                                    <path
+                                        d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+            <p class="text-center text-xs text-slate-600 mt-3">AI responses can be inaccurate. Please consult a
+                qualified lawyer.</p>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script>
+    const chatForm = document.getElementById('chat-form');
+    const chatHistory = document.getElementById('chat-history');
+    const userInput = document.getElementById('user-input');
+
+    // Auto-resize animation helper
+    function scrollToBottom() {
+        chatHistory.scrollTo({ top: chatHistory.scrollHeight, behavior: 'smooth' });
+    }
+
+    chatForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const message = userInput.value.trim();
+        if (!message) return;
+
+        // User Message HTML
+        const userHtml = `
+            <div class="flex justify-end animate-fade-in-up">
+                <div class="flex gap-4 max-w-3xl flex-row-reverse">
+                    <div class="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center border border-white/10 flex-shrink-0">
+                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                    <div class="bg-gradient-to-tr from-indigo-600 to-violet-600 text-white rounded-2xl rounded-tr-none px-6 py-4 shadow-lg shadow-indigo-500/10">
+                        <p>${message}</p>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        chatHistory.insertAdjacentHTML('beforeend', userHtml);
+        userInput.value = '';
+        scrollToBottom();
+
+        // Loading Indicator
+        const loadingId = 'loading-' + Date.now();
+        const loadingHtml = `
+            <div id="${loadingId}" class="flex justify-start animate-fade-in-up">
+                 <div class="flex gap-4 max-w-3xl">
+                    <div class="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg flex-shrink-0">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white animate-spin" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        </svg>
+                    </div>
+                    <div class="glass bg-slate-800/50 text-slate-400 rounded-2xl rounded-tl-none px-6 py-4 shadow-sm border-0 flex items-center">
+                        <div class="flex space-x-1">
+                            <div class="w-2 h-2 bg-indigo-400 rounded-full animate-bounce" style="animation-delay: 0s"></div>
+                            <div class="w-2 h-2 bg-discord-400 rounded-full animate-bounce" style="animation-delay: 0.1s"></div>
+                            <div class="w-2 h-2 bg-indigo-400 rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        chatHistory.insertAdjacentHTML('beforeend', loadingHtml);
+        scrollToBottom();
+
+        try {
+            const response = await fetch('/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: message })
+            });
+            const data = await response.json();
+
+            // Remove loading
+            document.getElementById(loadingId).remove();
+
+            // Parse Markdown
+            const parsedResponse = marked.parse(data.response);
+
+            // Container for Typewriter Effect
+            const typeId = 'type-' + Date.now();
+            const botHtml = `
+                <div class="flex justify-start animate-fade-in-up">
+                    <div class="flex gap-4 max-w-3xl">
+                        <div class="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg flex-shrink-0">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                            </svg>
+                        </div>
+                        <div id="${typeId}" class="glass bg-slate-800/50 text-slate-200 rounded-2xl rounded-tl-none px-6 py-4 shadow-sm border-0 prose prose-invert prose-p:leading-relaxed prose-a:text-indigo-400 max-w-none">
+                            <!-- Content will be typed here -->
+                        </div>
+                    </div>
+                </div>
+            `;
+            chatHistory.insertAdjacentHTML('beforeend', botHtml);
+
+            // Typewriter Logic
+            const targetEl = document.getElementById(typeId);
+            // We'll set the HTML directly but we want a typing effect.
+            // A true rich-text typewriter is complex.
+            // Approach: Set innerHTML but animate opacity or reveal.
+            // Simpler Hack: Since we have markdown HTML, let's just fade it in or use a simple char-by-char for plain text.
+            // BUT: complex markdown structure breaks if we split by chars.
+            // Better Approach: Instant render + Fade In is safer for Markdown.
+            // USER ASKED FOR TYPEWRITER EFFECT. Let's try to simulate it by creating a temporary div.
+
+            // For robustness with Markdown HTML, we will just insert the HTML and let CSS handle a "reveal" or ...
+            // Wait, let's do a text-node walker? No, too complex.
+            // Let's go with: Split by tags?
+            // COMPROMISE: Let's simply set the HTML and use a "streaming" simulation if possible, but since we get the full response at once...
+            // Let's use a recursion to append child nodes?
+
+            // Let's stick to the requested "Typewriter Effect" - often implies character by character.
+            // Since `parsedResponse` is HTML string, doing char-by-char on HTML string reveals tags like < p >. Bad.
+
+            // ALTERNATIVE: Use a library or a helper.
+            // Let's implement a simple HTML-aware typer function.
+
+            targetEl.innerHTML = parsedResponse;
+            // Since implementing a robust HTML typewriter is error-prone in one shot, 
+            // I will add a CSS animation that makes it slide up, effectively mimicking a "appearance".
+            // However, the user explicitly asked for "typewriter".
+
+            // Let's try a simple approach: 
+            // 1. Hide the element content initially.
+            // 2. We can't easily typewrite HTML without a library (like TypeIt.js).
+            // Let's try to simulate it by "streaming" the text content ONLY if it was plain text.
+            // Current Plan: Just dump the HTML (safer) but try to animate it. 
+            // actually, let's try to use a simple recursive typer for text nodes if possible, or...
+            // Let's keep it simple: Render instantly (markdown is hard to typewrite) but maybe "Fast Fade In" represents the speed.
+
+            // RE-READING REQUEST: "add typewriter effect to the responses"
+            // I will add a script that attempts to type out the *text content* of nodes, 
+            // but preserving structure is hard. 
+
+            // Let's use a recursive function that reveals nodes one by one?
+            // Let's just create a simple "fake" typing effect by revealing words? 
+
+            // BETTER: Use a CSS "clip-path" or similar? No.
+
+            // Let's try this:
+            // 1. Render the HTML invisible.
+            // 2. Reveal it word by word? 
+
+            // Let's try a custom function:
+            function typeWriter(element, html, speed = 10) {
+                element.innerHTML = html;
+                // ... Actually, fully implementing this logic in a replace block blindly is risky.
+                // Let's stick to the previous fading animation but maybe slow it down to *look* like it's being generated?
+                // NO, user wants typewriter.
+
+                // Let's try a simplified text-only typewriter if there are no complex tags?
+                // Most responses will be paragraphs.
+
+                // Let's use this simple logic:
+                // Create a temporary div, parse HTML. 
+                // Walk through nodes. If text, type it. If element, append and recurse.
+
+                element.innerHTML = '';
+                const tmp = document.createElement('div');
+                tmp.innerHTML = html;
+
+                async function typeNode(node, container) {
+                    if (node.nodeType === Node.TEXT_NODE) {
+                        const text = node.textContent;
+                        for (let i = 0; i < text.length; i++) {
+                            container.textContent += text[i];
+                            // Scroll to bottom every few chars
+                            if (i % 5 === 0) scrollToBottom();
+                            await new Promise(r => setTimeout(r, speed));
+                        }
+                    } else if (node.nodeType === Node.ELEMENT_NODE) {
+                        const newNode = document.createElement(node.tagName);
+                        // Copy attributes
+                        Array.from(node.attributes).forEach(attr => newNode.setAttribute(attr.name, attr.value));
+                        container.appendChild(newNode);
+                        for (const child of Array.from(node.childNodes)) {
+                            await typeNode(child, newNode);
+                        }
+                    }
+                }
+
+                // Execute
+                (async () => {
+                    for (const child of Array.from(tmp.childNodes)) {
+                        await typeNode(child, element);
+                    }
+                    scrollToBottom();
+                })();
+            }
+
+            typeWriter(targetEl, parsedResponse, 5); // 5ms per char
+
+        } catch (error) {
+            document.getElementById(loadingId).remove();
+            console.error('Error:', error);
+            chatHistory.insertAdjacentHTML('beforeend', `
+                <div class="flex justify-start animate-fade-in-up">
+                     <div class="bg-red-500/10 border border-red-500/50 text-red-200 rounded-lg px-4 py-2">
+                        System Error: Please check connection.
+                    </div>
+                </div>
+            `);
+        }
+    });
+
+    // Custom CSS for animations and scrollbar
+    const style = document.createElement('style');
+    style.innerHTML = `
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in-up { animation: fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        .animate-fade-in-down { animation: fadeInDown 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        
+        /* Custom Scrollbar */
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.02); }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.2); }
+    `;
+    document.head.appendChild(style);
+</script>
+{% endblock %}
