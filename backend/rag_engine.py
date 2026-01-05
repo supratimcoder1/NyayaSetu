@@ -99,11 +99,15 @@ ANSWER:
 """
 
     # 3. Generate Response
+    # Inject strong formatting instruction
+    formatting_instruction = "\nIMPORTANT: Format your answer with clear bullet points. Ensure each bullet point is on a NEW LINE."
+    final_prompt = full_prompt + formatting_instruction
+
     retries = 3
     final_response_text = ""
     for attempt in range(retries):
         try:
-            response = model.generate_content(full_prompt)
+            response = model.generate_content(final_prompt)
             final_response_text = response.text
             break # Success
         except Exception as e:
@@ -114,6 +118,12 @@ ANSWER:
             elif attempt == retries - 1:
                  final_response_text = f"I encountered an error while processing your request: {str(e)}"
     
+    # Post-processing: Ensure newlines before bullet points
+    import re
+    # Look for bullet points (*, -, or 1.) that are not preceded by a newline (ignoring start of string)
+    # This regex finds a non-newline character followed immediately by a bullet marker
+    final_response_text = re.sub(r'(?<!\n)([*-]|\d+\.) ', r'\n\1 ', final_response_text)
+
     # 4. Update Memory
     CONVERSATION_HISTORY.append((query_text, final_response_text))
     
