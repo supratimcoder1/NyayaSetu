@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - NyayaSetu</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,typography,aspect-ratio,line-clamp"></script>
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #374151;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #4b5563;
+        }
+    </style>
+    </style>
+    <script>
+        // Global Translations
+        const translations = {
+            'en': {
+                'start_advice': 'Start Advice Session',
+                'analyze_doc': 'Analyze Document',
+                'legal_forms': 'Legal Forms',
+                'forms_desc': 'Download ready-to-use templates for Rent, Affidavits, and more.',
+                'citizen_guides': 'Citizen Guides',
+                'guides_desc': 'Step-by-step walkthroughs for FIR, RTI, and other processes.',
+                'your_pref': 'Your Preference',
+                'interface_lang': 'Interface Language',
+                'ai_lang_sub': 'AI Response Language',
+                'hi': 'Hindi (हिंदी)',
+                'bn': 'Bengali (বাংলা)',
+                'te': 'Telugu (తెలుగు)',
+                'en': 'English',
+
+                // Navigation
+                'chat_nav': 'NyayaSahayak (Chat)',
+                'docs_nav': 'SamvidhanSetu (Docs)',
+                'forms_nav': 'NyayaBandhu (Forms)',
+                'helper_nav': 'NagrikSahayak (Helper)',
+                'admin_nav': 'System Admin',
+                'const_nav': 'Constitution Explorer',
+                'action_nav': 'Action Center (Forms)',
+
+                // Chat Specific
+                'new_chat': 'New Conversation',
+                'recent_chats': 'Recent Chats',
+                'no_history': 'No history yet.',
+                'welcome_intro': "Namaste! I'm NyayaSetu, your AI legal companion.",
+                'welcome_topics': 'You can ask me about:',
+                'topic_1': 'Fundamental Rights in the Constitution',
+                'topic_2': 'Changes in the new Bharatiya Nyaya Sanhita',
+                'topic_3': 'Legal procedures for common issues',
+                'type_question': 'Type your legal question...',
+                'ai_disclaimer': 'AI may make mistakes. Please verify significant information.',
+                'listening': 'Listening...',
+                'transcribing': 'Transcribing...',
+                'recording_tooltip': 'Click mic to stop'
+            },
+            'hi': {
+                'start_advice': 'सलाह सत्र शुरू करें',
+                'analyze_doc': 'दस्तावेज़ का विश्लेषण करें',
+                'legal_forms': 'कानूनी प्रपत्र',
+                'forms_desc': 'किराया, शपथ पत्र, और अधिक के लिए तैयार टेम्पलेट डाउनलोड करें।',
+                'citizen_guides': 'नागरिक गाइड',
+                'guides_desc': 'एफआईआर, आरटीआई और अन्य प्रक्रियाओं के लिए चरण-दर-चरण मार्गदर्शिकाएँ।',
+                'your_pref': 'आपकी पसंद',
+                'interface_lang': 'इंटरफ़ेस भाषा',
+                'ai_lang_sub': 'AI प्रतिक्रिया भाषा',
+                'hi': 'हिंदी',
+                'bn': 'बंगाली',
+                'te': 'तेलुगु',
+                'en': 'अंग्रेज़ी',
+
+                // Navigation
+                'chat_nav': 'न्यायसहायक (चैट)',
+                'docs_nav': 'संविधानसेतु (दस्तावेज़)',
+                'forms_nav': 'न्यायबंधु (फर्म्‍स)',
+                'helper_nav': 'नागरिकसहायक (हेल्पर)',
+                'admin_nav': 'सिस्टम एडमिन',
+                'const_nav': 'संविधान एक्सप्लोरर',
+                'action_nav': 'एक्शन सेंटर',
+
+                'new_chat': 'नई बातचीत',
+                'recent_chats': 'हाल की बातचीत',
+                'no_history': 'अभी तक कोई इतिहास नहीं।',
+                'welcome_intro': "नमस्ते! मैं न्यायसेतु हूँ, आपका AI कानूनी साथी।",
+                'welcome_topics': 'आप मुझसे पूछ सकते हैं:',
+                'topic_1': 'संविधान में मौलिक अधिकार',
+                'topic_2': 'नई भारतीय न्याय संहिता में बदलाव',
+                'topic_3': 'सामान्य मुद्दों के लिए कानूनी प्रक्रियाएं',
+                'type_question': 'अपना कानूनी सवाल यहाँ लिखें...',
+                'ai_disclaimer': 'AI गलतियाँ कर सकता है। कृपया महत्वपूर्ण जानकारी की पुष्टि करें।',
+                'listening': 'सुन रहा हूँ...',
+                'transcribing': 'लिप्यांतरण कर रहा हूँ...',
+                'recording_tooltip': 'रोकने के लिए क्लिक करें'
+            },
+            'bn': {
+                'start_advice': 'পরামর্শ সেশন শুরু করুন',
+                'analyze_doc': 'নথি বিশ্লেষণ করুন',
+                'legal_forms': 'আইনি ফর্ম',
+                'forms_desc': 'ভাড়া, হলফনামা এবং আরও অনেক কিছুর জন্য তৈরি টেমপ্লেট ডাউনলোড করুন।',
+                'citizen_guides': 'নাগরিক নির্দেশিকা',
+                'guides_desc': 'এফআইআর, আরটিআই এবং অন্যান্য প্রক্রিয়ার জন্য ধাপে ধাপে নির্দেশিকা।',
+                'your_pref': 'আপনার পছন্দ',
+                'interface_lang': 'ইন্টারফেস ভাষা',
+                'ai_lang_sub': 'এআই প্রতিক্রিয়া ভাষা',
+                'hi': 'হিন্দি',
+                'bn': 'বাংলা',
+                'te': 'তেলুগু',
+                'en': 'ইংরেজি',
+
+                // Navigation
+                'chat_nav': 'ন্যায়সহায়ক (চ্যাট)',
+                'docs_nav': 'সংবিধানসেতু (নথি)',
+                'forms_nav': 'ন্যায়বন্ধু (ফর্ম)',
+                'helper_nav': 'নাগরিকসহায়ক (হেল্পার)',
+                'admin_nav': 'সিস্টেম অ্যাডমিন',
+                'const_nav': 'সংবিধান এক্সপ্লোরার',
+                'action_nav': 'অ্যাকশন সেন্টার',
+
+                'new_chat': 'নতুন কথোপকথন',
+                'recent_chats': 'সাম্প্রতিক চ্যাট',
+                'no_history': 'এখনও কোন ইতিহাস নেই।',
+                'welcome_intro': "নমস্কার! আমি ন্যায়সেতু, আপনার এআই আইনি সঙ্গী।",
+                'welcome_topics': 'আপনি আমাকে জিজ্ঞাসা করতে পারেন:',
+                'topic_1': 'সংবিধানে মৌলিক অধিকার',
+                'topic_2': 'নতুন ভারতীয় ন্যায় সংহিতায় পরিবর্তন',
+                'topic_3': 'সাধারণ সমস্যার আইনি প্রক্রিয়া',
+                'type_question': 'আপনার আইনি প্রশ্ন টাইপ করুন...',
+                'ai_disclaimer': 'এআই ভুল করতে পারে। অনুগ্রহ করে গুরুত্বপূর্ণ তথ্য যাচাই করুন।',
+                'listening': 'শুনছি...',
+                'transcribing': 'ট্রান্সক্রাইব করা হচ্ছে...',
+                'recording_tooltip': 'বন্ধ করতে ক্লিক করুন'
+            },
+            'te': {
+                'start_advice': 'సలహా సెషన్ ప్రారంభించండి',
+                'analyze_doc': 'పత్రాన్ని విశ్లేషించండి',
+                'legal_forms': 'చట్టపరమైన ఫారాలు',
+                'forms_desc': 'అద్దె, అఫిడవిట్లు మరియు మరిన్నింటి కోసం సిద్ధంగా ఉన్న టెంప్లేట్లను డౌన్లోడ్ చేయండి.',
+                'citizen_guides': 'పౌర మార్గదర్శకాలు',
+                'guides_desc': 'FIR, RTI మరియు ఇతర ప్రక్రియల కోసం దశలవారీ మార్గదర్శకాలు.',
+                'your_pref': 'మీ ప్రాధాన్యత',
+                'interface_lang': 'ఇంటర్ఫేస్ భాష',
+                'ai_lang_sub': 'AI ప్రతిస్పందన భాష',
+                'hi': 'హిందీ',
+                'bn': 'బెంగాలీ',
+                'te': 'తెలుగు',
+                'en': 'ఆంగ్లం',
+
+                // Navigation
+                'chat_nav': 'న్యాయసహాయక్ (చాట్)',
+                'docs_nav': 'సంవిధానసేతు (పత్రాలు)',
+                'forms_nav': 'న్యాయబంధు (ఫారాలు)',
+                'helper_nav': 'నాగరికసహాయక్ (హెల్పర్)',
+                'admin_nav': 'సిస్టమ్ అడ్మిన్',
+                'const_nav': 'రాజ్యాంగ ఎక్స్ప్లోరర్',
+                'action_nav': 'యాక్షన్ సెంటర్',
+
+                'new_chat': 'కొత్త సంభాషణ',
+                'recent_chats': 'ఇటీవలి సంభాషణలు',
+                'no_history': 'ఇంకా చరిత్ర లేదు.',
+                'welcome_intro': "నమస్తే! నేను న్యాయసేతు, మీ AI న్యాయ సహాయకుడిని.",
+                'welcome_topics': 'మీరు నన్ను దీని గురించి అడగవచ్చు:',
+                'topic_1': 'రాజ్యాంగంలోని ప్రాథమిక హక్కులు',
+                'topic_2': 'కొత్త భారతీయ న్యాయ సంహితలో మార్పులు',
+                'topic_3': 'సాధారణ సమస్యలకు న్యాయపరమైన విధానాలు',
+                'type_question': 'మీ న్యాయపరమైన ప్రశ్నను ఇక్కడ టైప్ చేయండి...',
+                'ai_disclaimer': 'AI తప్పులు చేయవచ్చు. దయచేసి ముఖ్యమైన సమాచారాన్ని సరిచూసుకోండి.',
+                'listening': 'వినబడుతోంది...',
+                'transcribing': 'ట్రాన్స్క్రైబ్ చేస్తోంది...',
+                'recording_tooltip': 'ఆపడానికి క్లిక్ చేయండి'
+            }
+        };
+
+        function updateInterfaceLanguage(lang) {
+            const t = translations[lang] || translations['en'];
+
+            // Update Text Content
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (t[key]) el.textContent = t[key];
+            });
+
+            // Update Placeholders
+            document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+                const key = el.getAttribute('data-i18n-placeholder');
+                if (t[key]) el.placeholder = t[key];
+            });
+
+            // Store current lang for dynamic strings
+            window.currentLang = lang;
+
+            // Sync all selectors
+            document.querySelectorAll('select.language-selector').forEach(sel => {
+                sel.value = lang;
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // Global Event Delegation for Language Selectors
+            document.body.addEventListener('change', async (e) => {
+                if (e.target.classList && e.target.classList.contains('language-selector')) {
+                    const lang = e.target.value;
+
+                    // Update all UI immediately
+                    updateInterfaceLanguage(lang);
+
+                    // Persist to Backend
+                    try {
+                        await fetch('/users/me/language', {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ preferred_language: lang })
+                        });
+                    } catch (err) {
+                        console.error("Failed to update language preference", err);
+                    }
+                }
+            });
+
+            // Initialize Language from Server-Side Value
+            const globalSel = document.getElementById('global-lang-select');
+            if (globalSel) {
+                // Apply translations immediately based on what the server rendered
+                updateInterfaceLanguage(globalSel.value);
+            }
+
+            // --- Sidebar Resizer Logic ---
+            const sidebar = document.getElementById('main-sidebar');
+            const resizer = document.getElementById('sidebar-resizer');
+            let isResizing = false;
+
+            // Load saved width
+            const savedWidth = localStorage.getItem('sidebarWidth');
+            if (savedWidth && sidebar) {
+                sidebar.style.width = savedWidth + 'px';
+            }
+
+            if (resizer && sidebar) {
+                resizer.addEventListener('mousedown', (e) => {
+                    e.preventDefault();
+                    isResizing = true;
+                    // Disable transition during drag for 1:1 movement
+                    sidebar.style.transition = 'none';
+                    document.body.style.cursor = 'col-resize';
+                    document.addEventListener('mousemove', handleMouseMove);
+                    document.addEventListener('mouseup', stopResize);
+                });
+
+                function handleMouseMove(e) {
+                    if (!isResizing) return;
+                    // Use requestAnimationFrame for smooth 60fps rendering
+                    requestAnimationFrame(() => {
+                        const newWidth = Math.max(200, Math.min(e.clientX, 500));
+                        sidebar.style.width = newWidth + 'px';
+                    });
+                }
+
+                function stopResize() {
+                    isResizing = false;
+                    // Restore smooth transition for other state changes
+                    sidebar.style.transition = '';
+                    document.body.style.cursor = 'default';
+                    // Save width
+                    localStorage.setItem('sidebarWidth', parseInt(sidebar.style.width));
+
+                    document.removeEventListener('mousemove', handleMouseMove);
+                    document.removeEventListener('mouseup', stopResize);
+                }
+            }
+        });
+    </script>
+</head>
+
+<body class="bg-slate-950 text-slate-100 flex h-screen overflow-hidden antialiased">
+
+    <!-- Sidebar -->
+    <aside id="main-sidebar"
+        class="w-64 bg-slate-900 border-r border-white/10 flex-shrink-0 flex flex-col transition-all duration-300">
+        <!-- Logo Area -->
+        <div class="h-20 flex items-center px-6 border-b border-white/10">
+            <a href="/dashboard" class="flex items-center gap-3 w-full transition-opacity hover:opacity-80">
+                <div
+                    class="w-8 h-8 bg-gradient-to-tr from-indigo-500 to-purple-500 rounded-lg flex items-center justify-center shadow-lg">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" />
+                    </svg>
+                </div>
+                <span class="font-bold text-xl tracking-tight">NyayaSetu</span>
+            </a>
+        </div>
+
+        <!-- Navigation -->
+        <nav class="flex-1 overflow-y-auto py-6 px-3 space-y-2">
+            <!-- Main Module -->
+            <a href="/chat-ws"
+                class="flex items-center gap-3 px-4 py-3 {{ 'bg-indigo-600/10 text-indigo-400 border border-indigo-500/20' if request.url.path == '/chat-ws' else 'text-slate-400 hover:text-slate-100 hover:bg-white/5' }} rounded-xl transition-all">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                </svg>
+                <span class="font-medium" data-i18n="chat_nav">NyayaSahayak (Chat)</span>
+            </a>
+
+            <a href="/doc-ws"
+                class="flex items-center gap-3 px-4 py-3 {{ 'bg-indigo-600/10 text-indigo-400 border border-indigo-500/20' if request.url.path == '/doc-ws' else 'text-slate-400 hover:text-slate-100 hover:bg-white/5' }} rounded-xl transition-all">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <span class="font-medium" data-i18n="docs_nav">SamvidhanSetu (Docs)</span>
+            </a>
+
+            <a href="/forms-ws"
+                class="flex items-center gap-3 px-4 py-3 {{ 'bg-indigo-600/10 text-indigo-400 border border-indigo-500/20' if request.url.path == '/forms-ws' else 'text-slate-400 hover:text-slate-100 hover:bg-white/5' }} rounded-xl transition-all">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                </svg>
+                <span class="font-medium" data-i18n="forms_nav">NyayaBandhu (Forms)</span>
+            </a>
+
+            <a href="/bureaucracy-ws"
+                class="flex items-center gap-3 px-4 py-3 {{ 'bg-indigo-600/10 text-indigo-400 border border-indigo-500/20' if request.url.path == '/bureaucracy-ws' else 'text-slate-400 hover:text-slate-100 hover:bg-white/5' }} rounded-xl transition-all">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                </svg>
+                <span class="font-medium" data-i18n="helper_nav">NagrikSahayak (Helper)</span>
+            </a>
+
+            {% if user.role == 'admin' %}
+            <div class="h-px bg-white/5 my-2 mx-4"></div>
+            <a href="/admin-dashboard"
+                class="flex items-center gap-3 px-4 py-3 {{ 'bg-indigo-600/10 text-indigo-400 border border-indigo-500/20' if request.url.path == '/admin-dashboard' else 'text-purple-400 hover:text-purple-300 hover:bg-purple-500/10' }} rounded-xl transition-all">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+                </svg>
+                <span class="font-medium" data-i18n="admin_nav">System Admin</span>
+            </a>
+            {% endif %}
+
+            <a href="#"
+                class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-white/5 rounded-xl transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                </svg>
+                <span class="font-medium" data-i18n="const_nav">Constitution Explorer</span>
+            </a>
+            <a href="/forms-ws"
+                class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-slate-100 hover:bg-white/5 rounded-xl transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                </svg>
+                <span class="font-medium" data-i18n="action_nav">Action Center (Forms)</span>
+            </a>
+        </nav>
+
+        <!-- Language Settings (Global) -->
+        <div class="px-4 py-2 border-t border-white/10">
+            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2"
+                data-i18n="interface_lang">Interface Language</label>
+            <select id="global-lang-select"
+                class="language-selector w-full bg-slate-800 text-slate-300 text-sm rounded-lg border-none focus:ring-1 focus:ring-indigo-500 py-2 px-3">
+                <option value="en" {{ 'selected' if user.preferred_language=='en' else '' }}>English</option>
+                <option value="hi" {{ 'selected' if user.preferred_language=='hi' else '' }}>Hindi (हिंदी)</option>
+                <option value="bn" {{ 'selected' if user.preferred_language=='bn' else '' }}>Bengali (বাংলা)</option>
+                <option value="te" {{ 'selected' if user.preferred_language=='te' else '' }}>Telugu (తెలుగు)</option>
+            </select>
+        </div>
+
+        <!-- User Profile -->
+        <div class="p-4 border-t border-white/10">
+            <div class="flex items-center gap-3 px-3 py-2">
+                <div
+                    class="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-sm font-bold text-slate-300">
+                    {{ user.full_name[0] if user.full_name else 'U' }}
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p class="text-sm font-medium text-white truncate">{{ user.full_name }}</p>
+                    <p class="text-xs text-slate-500 truncate">{{ user.email }}</p>
+                </div>
+                <form action="/login" method="get"> <!-- Logout hack check -->
+                    <button type="submit" onclick="document.cookie = 'access_token=; Max-Age=0; path=/;'"
+                        class="text-slate-400 hover:text-white" title="Logout">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                        </svg>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Resizer Handle -->
+    <div id="sidebar-resizer"
+        class="w-1 bg-white/5 hover:bg-indigo-500 cursor-col-resize transition-colors flex-shrink-0 z-50"></div>
+
+    <!-- Main Content -->
+    <main class="flex-1 overflow-x-hidden overflow-y-auto bg-slate-950 relative">
+        <div class="max-w-7xl mx-auto px-6 py-8">
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+</body>
+
+</html>

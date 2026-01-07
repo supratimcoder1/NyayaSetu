@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="flex items-center justify-center min-h-[60vh]">
+    <div class="glass w-full max-w-md p-8 rounded-2xl shadow-2xl border border-white/10">
+        <h2
+            class="text-3xl font-bold text-center mb-2 bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-purple-400">
+            Welcome Back</h2>
+        <p class="text-slate-400 text-center mb-8">Login to continue your legal journey.</p>
+
+        <form id="login-form" class="space-y-6">
+            <div>
+                <label class="block text-sm font-medium text-slate-300 mb-2">Email Address</label>
+                <input type="email" name="username" required
+                    class="w-full bg-slate-900/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all placeholder:text-slate-600"
+                    placeholder="you@example.com">
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-slate-300 mb-2">Password</label>
+                <input type="password" name="password" required
+                    class="w-full bg-slate-900/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all placeholder:text-slate-600"
+                    placeholder="••••••••">
+            </div>
+
+            <button type="submit"
+                class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold py-3 px-4 rounded-xl shadow-lg shadow-indigo-500/20 transition-all transform hover:scale-[1.02]">
+                Log In
+            </button>
+        </form>
+
+        <p class="mt-6 text-center text-slate-400 text-sm">
+            Don't have an account? <a href="/register" class="text-indigo-400 hover:text-indigo-300 font-medium">Sign
+                up</a>
+        </p>
+
+        <!-- Message Container -->
+        <div id="message" class="mt-4 text-center text-sm text-red-400 hidden"></div>
+
+    </div>
+</div>
+
+<script>
+    document.getElementById('login-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+
+        try {
+            const response = await fetch('/login', {
+                method: 'POST',
+                body: formData // Sends as multipart/form-data or urlencoded automatically usually, but let's check. 
+                // OAuth2PasswordRequestForm expects form data.
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                // Store token in cookie for easy server-side access if needed, or localstorage
+                // Cookie is set by server (HttpOnly)
+                // Redirect to dashboard
+                window.location.href = '/dashboard';
+            } else {
+                const msgEl = document.getElementById('message');
+                msgEl.textContent = "Invalid credentials. Please try again.";
+                msgEl.classList.remove('hidden');
+            }
+        } catch (error) {
+            console.error(error);
+        }
+    });
+</script>
+{% endblock %}

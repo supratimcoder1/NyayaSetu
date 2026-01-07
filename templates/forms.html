@@ -1,0 +1,83 @@
+{% extends "dashboard_base.html" %}
+
+{% block content %}
+<div class="h-[calc(100vh-6rem)] flex flex-col">
+    <!-- Header & Search -->
+    <!-- Header & Search -->
+    <div class="mb-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div>
+            <h1 class="text-2xl font-bold text-white" data-i18n="nb_title">NyayaBandhu</h1>
+            <p class="text-sm text-slate-400" data-i18n="nb_subtitle">Essential Legal Forms & Templates Library</p>
+        </div>
+
+        <form class="relative w-full md:w-96" action="/forms-ws" method="get">
+            <input type="text" name="q" data-i18n-placeholder="search_placeholder"
+                placeholder="Search forms (e.g., 'Rent', 'RTI')..." value="{{ query if query else '' }}"
+                class="w-full bg-slate-900 border border-slate-700 rounded-xl py-2 pl-4 pr-10 text-white placeholder-slate-500 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
+            <button type="submit" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+            </button>
+        </form>
+    </div>
+
+    <!-- Forms Grid -->
+    <div class="flex-1 overflow-y-auto custom-scrollbar">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-6">
+            {% for form in forms %}
+            <div
+                class="group bg-slate-900/50 border border-white/5 hover:border-indigo-500/30 rounded-2xl p-6 transition-all hover:bg-slate-800/80 hover:-translate-y-1 relative overflow-hidden">
+                <!-- Hover Glow -->
+                <div
+                    class="absolute -inset-0.5 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl opacity-0 group-hover:opacity-10 transition duration-500 blur">
+                </div>
+
+                <div class="relative z-10 flex flex-col h-full">
+                    <div class="flex items-start justify-between mb-4">
+                        <div
+                            class="p-3 bg-slate-800 rounded-xl group-hover:bg-indigo-500/20 group-hover:text-indigo-300 transition-colors">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                                stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                        </div>
+                        <span
+                            class="text-xs font-medium px-2 py-1 bg-white/5 rounded-lg text-slate-400 border border-white/5">{{
+                            form.category }}</span>
+                    </div>
+
+                    <h3 class="text-lg font-semibold text-white mb-2 line-clamp-1">{{ form.title }}</h3>
+                    <p class="text-sm text-slate-400 mb-6 flex-1 line-clamp-3">{{ form.description }}</p>
+
+                    <div class="flex items-center justify-between pt-4 border-t border-white/5">
+                        <span class="text-xs text-slate-500">{{ form.language }}</span>
+                        <a href="{{ form.url }}"
+                            class="flex items-center gap-2 text-sm font-medium text-indigo-400 hover:text-indigo-300 transition-colors">
+                            <span data-i18n="download">Download</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
+                                stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                            </svg>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="col-span-full flex flex-col items-center justify-center text-slate-500 py-12">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mb-4 opacity-20" fill="none"
+                    viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                        d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <p>No forms found matching your search.</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

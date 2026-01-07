@@ -35,10 +35,11 @@
                 <div class="flex gap-4 max-w-3xl">
                     <div
                         class="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg flex-shrink-0">
+                        <!-- Scale Icon (Nyaya) -->
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none"
                             viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" />
                         </svg>
                     </div>
                     <div
@@ -83,12 +84,18 @@
                                     class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
                                 <span class="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
                             </span>
-                            <button type="submit"
+                            <button type="submit" id="send-btn"
                                 class="bg-indigo-600 hover:bg-indigo-500 text-white p-3 rounded-lg shadow-lg shadow-indigo-500/30 transition-all transform active:scale-95">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20"
-                                    fill="currentColor">
+                                <!-- Default Send Icon -->
+                                <svg id="icon-send" xmlns="http://www.w3.org/2000/svg"
+                                    class="h-5 w-5 transform rotate-90" viewBox="0 0 20 20" fill="currentColor">
                                     <path
                                         d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" />
+                                </svg>
+                                <!-- Stop Icon (Hidden by default) -->
+                                <svg id="icon-stop" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 hidden"
+                                    viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M6 6h12v12H6z" />
                                 </svg>
                             </button>
                         </div>
@@ -101,21 +108,66 @@
     </div>
 </div>
 
+<!-- Debug: Cookie Reset Button (For Development) -->
+<button onclick="document.cookie = 'chat_count=; Max-Age=0; path=/;'; window.location.reload();"
+    class="fixed bottom-4 right-4 bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs px-2 py-1 rounded border border-red-500/20 z-50 transition-colors"
+    title="Reset Message Limit">
+    Reset Limit (Debug)
+</button>
+
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <script>
     const chatForm = document.getElementById('chat-form');
     const chatHistory = document.getElementById('chat-history');
     const userInput = document.getElementById('user-input');
+    const sendBtn = document.getElementById('send-btn');
+    const iconSend = document.getElementById('icon-send');
+    const iconStop = document.getElementById('icon-stop');
+
+    let abortController = null;
 
     // Auto-resize animation helper
     function scrollToBottom() {
         chatHistory.scrollTo({ top: chatHistory.scrollHeight, behavior: 'smooth' });
     }
 
+    function toggleButtonState(isGenerating) {
+        if (isGenerating) {
+            iconSend.classList.add('hidden');
+            iconStop.classList.remove('hidden');
+            sendBtn.classList.replace('bg-indigo-600', 'bg-red-600');
+            sendBtn.classList.replace('hover:bg-indigo-500', 'hover:bg-red-500');
+            sendBtn.classList.replace('shadow-indigo-500/30', 'shadow-red-500/30');
+            userInput.disabled = true;
+            userInput.placeholder = "Generating response...";
+        } else {
+            iconSend.classList.remove('hidden');
+            iconStop.classList.add('hidden');
+            sendBtn.classList.replace('bg-red-600', 'bg-indigo-600');
+            sendBtn.classList.replace('hover:bg-red-500', 'hover:bg-indigo-500');
+            sendBtn.classList.replace('shadow-red-500/30', 'shadow-indigo-500/30');
+            userInput.disabled = false;
+            userInput.placeholder = "Describe your legal query...";
+            userInput.focus();
+        }
+    }
+
     chatForm.addEventListener('submit', async (e) => {
         e.preventDefault();
+
+        // If currently generating, abort
+        if (abortController) {
+            abortController.abort();
+            abortController = null;
+            return;
+        }
+
         const message = userInput.value.trim();
         if (!message) return;
+
+        // Start new generation
+        abortController = new AbortController();
+        toggleButtonState(true);
 
         // User Message HTML
         const userHtml = `
@@ -137,12 +189,13 @@
         userInput.value = '';
         scrollToBottom();
 
-        // Loading Indicator
+        // Loading Indicator (Lightning Symbol)
         const loadingId = 'loading-' + Date.now();
         const loadingHtml = `
             <div id="${loadingId}" class="flex justify-start animate-fade-in-up">
                  <div class="flex gap-4 max-w-3xl">
                     <div class="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg flex-shrink-0">
+                        <!-- Keep Lightning for Loading -->
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white animate-spin" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
                         </svg>
@@ -164,7 +217,8 @@
             const response = await fetch('/chat', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ message: message })
+                body: JSON.stringify({ message: message }),
+                signal: abortController.signal
             });
             const data = await response.json();
 
@@ -180,8 +234,11 @@
                 <div class="flex justify-start animate-fade-in-up">
                     <div class="flex gap-4 max-w-3xl">
                         <div class="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg flex-shrink-0">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                            <!-- Nyaya Scale Icon for Response -->
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none"
+                                viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" />
                             </svg>
                         </div>
                         <div id="${typeId}" class="glass bg-slate-800/50 text-slate-200 rounded-2xl rounded-tl-none px-6 py-4 shadow-sm border-0 prose prose-invert prose-p:leading-relaxed prose-a:text-indigo-400 max-w-none">
@@ -193,112 +250,35 @@
             chatHistory.insertAdjacentHTML('beforeend', botHtml);
 
             // Typewriter Logic
+            // Render Instant Response (No Typewriter)
             const targetEl = document.getElementById(typeId);
-            // We'll set the HTML directly but we want a typing effect.
-            // A true rich-text typewriter is complex.
-            // Approach: Set innerHTML but animate opacity or reveal.
-            // Simpler Hack: Since we have markdown HTML, let's just fade it in or use a simple char-by-char for plain text.
-            // BUT: complex markdown structure breaks if we split by chars.
-            // Better Approach: Instant render + Fade In is safer for Markdown.
-            // USER ASKED FOR TYPEWRITER EFFECT. Let's try to simulate it by creating a temporary div.
-
-            // For robustness with Markdown HTML, we will just insert the HTML and let CSS handle a "reveal" or ...
-            // Wait, let's do a text-node walker? No, too complex.
-            // Let's go with: Split by tags?
-            // COMPROMISE: Let's simply set the HTML and use a "streaming" simulation if possible, but since we get the full response at once...
-            // Let's use a recursion to append child nodes?
-
-            // Let's stick to the requested "Typewriter Effect" - often implies character by character.
-            // Since `parsedResponse` is HTML string, doing char-by-char on HTML string reveals tags like < p >. Bad.
-
-            // ALTERNATIVE: Use a library or a helper.
-            // Let's implement a simple HTML-aware typer function.
-
             targetEl.innerHTML = parsedResponse;
-            // Since implementing a robust HTML typewriter is error-prone in one shot, 
-            // I will add a CSS animation that makes it slide up, effectively mimicking a "appearance".
-            // However, the user explicitly asked for "typewriter".
-
-            // Let's try a simple approach: 
-            // 1. Hide the element content initially.
-            // 2. We can't easily typewrite HTML without a library (like TypeIt.js).
-            // Let's try to simulate it by "streaming" the text content ONLY if it was plain text.
-            // Current Plan: Just dump the HTML (safer) but try to animate it. 
-            // actually, let's try to use a simple recursive typer for text nodes if possible, or...
-            // Let's keep it simple: Render instantly (markdown is hard to typewrite) but maybe "Fast Fade In" represents the speed.
-
-            // RE-READING REQUEST: "add typewriter effect to the responses"
-            // I will add a script that attempts to type out the *text content* of nodes, 
-            // but preserving structure is hard. 
-
-            // Let's use a recursive function that reveals nodes one by one?
-            // Let's just create a simple "fake" typing effect by revealing words? 
-
-            // BETTER: Use a CSS "clip-path" or similar? No.
-
-            // Let's try this:
-            // 1. Render the HTML invisible.
-            // 2. Reveal it word by word? 
-
-            // Let's try a custom function:
-            function typeWriter(element, html, speed = 10) {
-                element.innerHTML = html;
-                // ... Actually, fully implementing this logic in a replace block blindly is risky.
-                // Let's stick to the previous fading animation but maybe slow it down to *look* like it's being generated?
-                // NO, user wants typewriter.
-
-                // Let's try a simplified text-only typewriter if there are no complex tags?
-                // Most responses will be paragraphs.
-
-                // Let's use this simple logic:
-                // Create a temporary div, parse HTML. 
-                // Walk through nodes. If text, type it. If element, append and recurse.
-
-                element.innerHTML = '';
-                const tmp = document.createElement('div');
-                tmp.innerHTML = html;
-
-                async function typeNode(node, container) {
-                    if (node.nodeType === Node.TEXT_NODE) {
-                        const text = node.textContent;
-                        for (let i = 0; i < text.length; i++) {
-                            container.textContent += text[i];
-                            // Scroll to bottom every few chars
-                            if (i % 5 === 0) scrollToBottom();
-                            await new Promise(r => setTimeout(r, speed));
-                        }
-                    } else if (node.nodeType === Node.ELEMENT_NODE) {
-                        const newNode = document.createElement(node.tagName);
-                        // Copy attributes
-                        Array.from(node.attributes).forEach(attr => newNode.setAttribute(attr.name, attr.value));
-                        container.appendChild(newNode);
-                        for (const child of Array.from(node.childNodes)) {
-                            await typeNode(child, newNode);
-                        }
-                    }
-                }
-
-                // Execute
-                (async () => {
-                    for (const child of Array.from(tmp.childNodes)) {
-                        await typeNode(child, element);
-                    }
-                    scrollToBottom();
-                })();
-            }
-
-            typeWriter(targetEl, parsedResponse, 5); // 5ms per char
 
         } catch (error) {
-            document.getElementById(loadingId).remove();
-            console.error('Error:', error);
-            chatHistory.insertAdjacentHTML('beforeend', `
-                <div class="flex justify-start animate-fade-in-up">
-                     <div class="bg-red-500/10 border border-red-500/50 text-red-200 rounded-lg px-4 py-2">
-                        System Error: Please check connection.
+            document.getElementById(loadingId)?.remove();
+
+            if (error.name === 'AbortError') {
+                chatHistory.insertAdjacentHTML('beforeend', `
+                    <div class="flex justify-start animate-fade-in-up">
+                         <div class="bg-yellow-500/10 border border-yellow-500/50 text-yellow-200 rounded-lg px-4 py-2 text-sm">
+                            Response generation stopped by user.
+                        </div>
                     </div>
-                </div>
-            `);
+                `);
+            } else {
+                console.error('Error:', error);
+                chatHistory.insertAdjacentHTML('beforeend', `
+                    <div class="flex justify-start animate-fade-in-up">
+                         <div class="bg-red-500/10 border border-red-500/50 text-red-200 rounded-lg px-4 py-2">
+                            System Error: Please check connection.
+                        </div>
+                    </div>
+                `);
+            }
+        } finally {
+            abortController = null;
+            toggleButtonState(false);
+            scrollToBottom();
         }
     });
 
