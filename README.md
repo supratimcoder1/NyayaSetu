@@ -12,8 +12,8 @@ NyayaSetu is an AI-powered legal assistant designed to simplify the Indian burea
 
 ### 1. 🤖 AI Legal Chatbot ("Nyaya Sahayak")
 *   **Context-Aware**: Powered by **Gemini Pro** and **RAG (Retrieval Augmented Generation)** using ChromaDB.
-*   **Knowledge Base**: Trained on the **Bharatiya Nyaya Sanhita (BNS)**, **Bharatiya Nagarik Suraksha Sanhita (BNSS)**, and the **Constitution of India**.
-*   **Multilingual**: Supports **Hindi, Bengali, Telugu**, and English.
+*   **Knowledge Base**: Trained on the **Bharatiya Nyaya Sanhita (BNS)**, **Bharatiya Nagarik Suraksha Sanhita (BNSS)**, **Bharatiya Sakshya AdhiNyam (BSA)** and the **Constitution of India**.
+*   **Multilingual**: Supports **Hindi, Bengali, Telugu**, and **English**.
 *   **Voice-First**: Integrated Speech-to-Text for accessibility.
 
 ### 2. 📄 Document Simplifier ("Samvidhan Setu")
