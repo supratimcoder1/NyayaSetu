@@ -2,7 +2,7 @@
 
 **Bridging the Gap Between Citizens and Justice.**
 
-NyayaSetu is an AI-powered legal assistant designed to simplify the Indian bureaucratic process and make the Constitution and laws (BNS, BNSS) accessible to every citizen in plain language. Built for the **IMPECTUS Hackathon**.
+NyayaSetu is an AI-powered legal assistant designed to simplify the Indian bureaucratic process and make the Constitution and laws (BSA, BNS, BNSS) accessible to every citizen in plain language. Built for the **IMPECTUS Hackathon**.
 
 ![NyayaSetu Banner](static/nyayasetu_banner.png)
 
