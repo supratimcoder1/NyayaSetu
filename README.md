@@ -74,6 +74,8 @@ ACCESS_TOKEN_EXPIRE_MINUTES=30
 
 ### 4. Initialize Data
 Place your source PDF documents in the `data/` folder:
+
+*   `data/BSA_2023.pdf`
 *   `data/BNS_2023.pdf`
 *   `data/BNSS_2023.pdf`
 *   `data/constitution.pdf`
