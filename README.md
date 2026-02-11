@@ -42,6 +42,19 @@ NyayaSetu is an AI-powered legal assistant designed to simplify the Indian burea
 
 ---
 
+## 📂 Project Structure
+
+```text
+NyayaSetu/
+├── backend/          # FastAPI application & logic
+├── templates/        # Jinja2 HTML templates
+├── static/           # CSS, JS, Images
+├── data/             # Source PDF documents
+└── chroma_db_store/  # Vector embeddings database
+```
+
+---
+
 ## ⚙️ Setup & Installation
 
 Follow these steps to set up the project locally:
@@ -99,7 +112,79 @@ The application will be available at: **http://localhost:8000**
 *   **Reset Chat Limit**: A debug button is available on the landing page (bottom-right) to reset the free chat limit cookie.
 *   **Admin Panel**: Access via `/admin-dashboard` (requires login).
 
+### ❓ Troubleshooting
+
+*   **Login Issues**: If you get stuck, try clearing your browser cookies.
+*   **API Errors**: Ensure `GEMINI_API_KEY` is set correctly in `.env`.
+*   **Database Locks**: If the DB acts up, you can safely delete `nyayasetu.db` (it will auto-regenerate).
+
+
+## 🛠️ Architecture
+
+```mermaid
+graph TD
+    subgraph Client
+        UI[💻 Web Interface]
+        Voice[🎙️ Voice Input]
+    end
+
+    subgraph "Application Server"
+        API[⚙️ FastAPI Backend]
+        Auth[🔐 Auth & Sessions]
+        RAG[🔍 RAG Engine]
+    end
+
+    subgraph "External Services"
+        Gemini[🧠 Gemini Pro]
+        GCloud[☁️ Google Cloud APIs]
+    end
+
+    subgraph Data
+        VDB[(🗄️ FAISS Vector Store)]
+        SQL[(💾 SQLite User DB)]
+        Docs[📄 Legal Documents]
+    end
+
+    UI --> API
+    Voice --> API
+    API --> Auth
+    API --> RAG
+    RAG --> VDB
+    RAG --> Gemini
+    API --> GCloud
+    Auth --> SQL
+    VDB -.-> Docs
+```
+
+## 🔄 User Journey
+
+```mermaid
+sequenceDiagram
+    participant User as 👤 Citizen
+    participant FE as 💻 NyayaSetu UI
+    participant BE as ⚙️ Backend (FastAPI)
+    participant VDB as 🗄️ Vector DB (FAISS)
+    participant AI as 🧠 Gemini AI
+
+    User->>FE: Ask Question (Voice/Text)
+    FE->>BE: Send Input
+    BE->>BE: Transcribe & Translate
+    BE->>VDB: Search for Legal Context
+    VDB-->>BE: Return Relevant Acts
+    BE->>AI: Send Query + Laws
+    AI-->>BE: Generate Simplified Answer
+    BE-->>FE: Return AI Response
+    FE-->>User: Display & Speak Answer
+```
+
+## 🚀 Future Roadmap
+- **Hyper-Local Legal Aid**: Integration with State-specific laws.
+- **Pro-Bono Lawyer Marketplace**: Connect identifying pro-bono lawyers.
+- **Offline Mode**: TinyML for basic queries.
+
 ---
+
+
 
 ## 🤝 Contribution
 1.  Fork the repo.
@@ -110,4 +195,3 @@ The application will be available at: **http://localhost:8000**
 
 ---
 
-Made with ❤️ for India by Team **DarthCoders**.

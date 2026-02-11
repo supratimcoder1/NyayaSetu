@@ -44,3 +44,12 @@ class Message(Base):
     timestamp = Column(DateTime, default=datetime.utcnow)
 
     session = relationship("ChatSession", back_populates="messages")
+
+class ContactSubmission(Base):
+    __tablename__ = "contact_submissions"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String)
+    email = Column(String)
+    message = Column(Text)
+    created_at = Column(DateTime, default=datetime.utcnow)

@@ -22,7 +22,7 @@ app = FastAPI(title="NyayaSetu")
 async def sliding_session_middleware(request: Request, call_next):
     import logging
     logger = logging.getLogger("uvicorn")
-    logger.info(f"DEBUG: Processing {request.url.path}") # Verify traffic
+    # logger.info(f"DEBUG: Processing {request.url.path}") # Verify traffic
     response = await call_next(request)
     
     # Check for access token
@@ -71,6 +71,22 @@ async def login_page(request: Request):
 @app.get("/register", response_class=HTMLResponse)
 async def register_page(request: Request):
     return templates.TemplateResponse("register.html", {"request": request})
+
+@app.get("/wip", response_class=HTMLResponse)
+async def wip_page(request: Request):
+    return templates.TemplateResponse("work_in_progress.html", {"request": request})
+
+@app.post("/contact")
+async def contact_form(submission: schemas.ContactRequest, db: Session = Depends(database.get_db)):
+    new_submission = models.ContactSubmission(
+        name=submission.name,
+        email=submission.email,
+        message=submission.message
+    )
+    db.add(new_submission)
+    db.commit()
+    db.refresh(new_submission)
+    return {"message": "Message sent successfully!"}
 
 from fastapi.responses import RedirectResponse
 

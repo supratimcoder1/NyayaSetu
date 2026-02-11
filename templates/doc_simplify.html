@@ -3,71 +3,136 @@
 {% block content %}
 <div class="h-[calc(100vh-6rem)] flex flex-col">
     <!-- Header -->
-    <div class="mb-6">
-        <h1 class="text-2xl font-bold text-white" data-i18n="ss_title">SamvidhanSetu</h1>
-        <p class="text-sm text-slate-400" data-i18n="ss_subtitle">Upload a legal document (Image/PDF) to get a simple
-            summary.</p>
+    <div class="mb-8 flex items-center gap-4">
+        <div class="p-3 bg-gradient-to-tr from-indigo-500 to-purple-500 rounded-2xl shadow-lg shadow-indigo-500/20">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24"
+                stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+        </div>
+        <div>
+            <h1 class="text-3xl font-bold text-white bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400"
+                data-i18n="ss_title">SamvidhanSetu</h1>
+            <p class="text-slate-400" data-i18n="ss_subtitle">AI-Powered Legal Document Simplifier</p>
+        </div>
     </div>
 
-    <div class="flex-1 flex gap-6 overflow-hidden">
+    <div class="flex-1 flex gap-8 overflow-hidden">
         <!-- Upload Section -->
-        <div class="w-1/3 bg-slate-900/50 border border-white/5 rounded-2xl p-6 flex flex-col">
-            <h3 class="font-semibold text-lg text-white mb-4" data-i18n="upload_doc_title">Upload Document</h3>
-
-            <form id="upload-form" class="flex-1 flex flex-col">
+        <div class="w-1/3 flex flex-col">
+            <div
+                class="glass border border-white/10 rounded-3xl p-8 flex flex-col h-full shadow-xl relative overflow-hidden group">
+                <!-- Decorative Glow -->
                 <div
-                    class="flex-1 border-2 border-dashed border-slate-700 rounded-xl flex flex-col items-center justify-center p-6 transition-colors hover:border-indigo-500/50 bg-slate-900/30 relative">
-                    <input type="file" name="file" id="file-input" accept="image/*,application/pdf"
-                        class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" required>
-
-                    <div id="upload-placeholder" class="text-center pointer-events-none">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto text-slate-500 mb-3"
-                            fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                        </svg>
-                        <p class="text-slate-400 font-medium" data-i18n="click_drag">Click or Drag file here</p>
-                        <p class="text-xs text-slate-600 mt-1" data-i18n="formats_supported">JPG, PNG, PDF supported</p>
-                    </div>
-
-                    <div id="file-preview" class="hidden w-full h-full object-contain flex items-center justify-center">
-                        <p class="text-indigo-400 font-medium truncate px-4" id="filename-display"></p>
-                    </div>
+                    class="absolute -top-20 -right-20 w-40 h-40 bg-indigo-500/20 rounded-full blur-3xl group-hover:bg-indigo-500/30 transition-all duration-700">
                 </div>
 
-                <div class="mt-6">
-                    <button type="submit" id="analyze-btn"
-                        class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold py-3 px-4 rounded-xl shadow-lg shadow-indigo-500/20 transition-all flex items-center justify-center gap-2">
-                        <span data-i18n="simplify_btn">Simplify Document</span>
-                    </button>
-                </div>
-            </form>
+                <h3 class="font-bold text-xl text-white mb-6 flex items-center gap-2">
+                    <span class="w-2 h-8 bg-indigo-500 rounded-full"></span>
+                    <span data-i18n="upload_doc_title">Upload Document</span>
+                </h3>
+
+                <form id="upload-form" class="flex-1 flex flex-col">
+                    <div
+                        class="flex-1 border-2 border-dashed border-slate-700 hover:border-indigo-400 rounded-2xl flex flex-col items-center justify-center p-6 transition-all duration-300 bg-slate-900/30 relative group/drop hover:bg-slate-900/50">
+                        <input type="file" name="file" id="file-input" accept="image/*,application/pdf"
+                            class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" required>
+
+                        <div id="upload-placeholder"
+                            class="text-center pointer-events-none transform transition-transform group-hover/drop:scale-105">
+                            <div
+                                class="w-20 h-20 bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4 group-hover/drop:bg-indigo-500/20 transition-colors">
+                                <svg xmlns="http://www.w3.org/2000/svg"
+                                    class="h-10 w-10 text-slate-400 group-hover/drop:text-indigo-400 transition-colors"
+                                    fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                        d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                                </svg>
+                            </div>
+                            <p class="text-lg text-slate-300 font-medium mb-1" data-i18n="click_drag">Click or Drag file
+                                here</p>
+                            <p class="text-sm text-slate-500" data-i18n="formats_supported">Supports JPG, PNG, PDF</p>
+                        </div>
+
+                        <div id="file-preview" class="hidden w-full h-full flex flex-col items-center justify-center">
+                            <div class="w-16 h-16 bg-green-500/20 rounded-2xl flex items-center justify-center mb-3">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-green-400" fill="none"
+                                    viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                            </div>
+                            <p class="text-green-400 font-medium truncate px-4 max-w-full text-center"
+                                id="filename-display"></p>
+                            <p class="text-xs text-slate-500 mt-2">Ready to scan</p>
+                        </div>
+                    </div>
+
+                    <div class="mt-8">
+                        <button type="submit" id="analyze-btn"
+                            class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold py-4 px-6 rounded-xl shadow-lg shadow-indigo-500/20 transition-all transform hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-3">
+                            <span data-i18n="simplify_btn">Simplify Document</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                                stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M13 10V3L4 14h7v7l9-11h-7z" />
+                            </svg>
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
 
-        <!-- content Result Section -->
-        <div class="w-2/3 bg-slate-900/50 border border-white/5 rounded-2xl p-6 flex flex-col relative">
-            <h3 class="font-semibold text-lg text-white mb-4" data-i18n="simplified_summary">Simplified Summary</h3>
-
-            <div id="result-area"
-                class="flex-1 overflow-y-auto custom-scrollbar prose prose-invert prose-p:leading-relaxed prose-li:marker:text-indigo-400 max-w-none">
-                <div class="h-full flex items-center justify-center text-slate-600">
-                    <div class="text-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto mb-4 opacity-20" fill="none"
-                            viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        <!-- Result Section -->
+        <div class="w-2/3 flex flex-col">
+            <div
+                class="glass border border-white/10 rounded-3xl p-8 flex flex-col h-full shadow-xl relative overflow-hidden">
+                <h3 class="font-bold text-xl text-white mb-6 flex items-center gap-3">
+                    <span class="p-2 bg-indigo-500/10 rounded-lg text-indigo-400">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                         </svg>
-                        <p data-i18n="upload_prompt">Upload a document to see the explanation here.</p>
+                    </span>
+                    <span data-i18n="simplified_summary">Simplified Summary</span>
+                </h3>
+
+                <div id="result-area"
+                    class="flex-1 overflow-y-auto custom-scrollbar prose prose-invert prose-p:text-slate-300 prose-headings:text-indigo-200 prose-strong:text-white max-w-none pr-4">
+                    <div class="h-full flex flex-col items-center justify-center text-slate-600 space-y-4">
+                        <div class="p-6 bg-slate-900/50 rounded-full border border-slate-800">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 opacity-40" fill="none"
+                                viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                    d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />
+                            </svg>
+                        </div>
+                        <p class="text-lg font-medium" data-i18n="upload_prompt">Document summary will appear here</p>
                     </div>
                 </div>
-            </div>
 
-            <!-- Loading Overlay -->
-            <div id="loading-overlay"
-                class="absolute inset-0 bg-slate-900/80 backdrop-blur-sm z-10 hidden flex flex-col items-center justify-center">
-                <div class="w-12 h-12 border-4 border-indigo-500/30 border-t-indigo-500 rounded-full animate-spin mb-4">
+                <!-- Loading Overlay -->
+                <div id="loading-overlay"
+                    class="absolute inset-0 bg-slate-900/90 backdrop-blur-md z-20 hidden flex flex-col items-center justify-center">
+                    <div class="relative w-24 h-24 mb-6">
+                        <div class="absolute inset-0 border-4 border-indigo-500/20 rounded-full"></div>
+                        <div
+                            class="absolute inset-0 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin">
+                        </div>
+                        <svg xmlns="http://www.w3.org/2000/svg"
+                            class="absolute inset-0 m-auto h-8 w-8 text-indigo-400 animate-pulse" fill="none"
+                            viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                    </div>
+                    <p class="text-xl font-bold text-white mb-2" data-i18n="analyzing">Analyzing Document</p>
+                    <p class="text-sm text-indigo-400">Our AI is reading through the legalese...</p>
                 </div>
-                <p class="text-indigo-300 animate-pulse" data-i18n="analyzing">Analyzing Document...</p>
             </div>
         </div>
     </div>
@@ -116,7 +181,9 @@
 
         } catch (error) {
             console.error(error);
-            resultArea.innerHTML = `<p class="text-red-400">Error processing document. Please try again.</p>`;
+            resultArea.innerHTML = `<div class="p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-200 text-center">
+                <p>⚠️ Error processing document. Please try again.</p>
+            </div>`;
         } finally {
             loadingOverlay.classList.add('hidden');
         }

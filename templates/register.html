@@ -1,60 +1,65 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="flex items-center justify-center min-h-[60vh]">
-    <div class="glass w-full max-w-md p-8 rounded-2xl shadow-2xl border border-white/10">
-        <h2
-            class="text-3xl font-bold text-center mb-2 bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-purple-400">
-            Join NyayaSetu</h2>
-        <p class="text-slate-400 text-center mb-8">Create your account to access personalized legal aid.</p>
+<div class="relative min-h-[60vh] flex items-center justify-center overflow-hidden">
+    <!-- Particles -->
+    <canvas id="bg-canvas" class="absolute inset-0 w-full h-full z-0 pointer-events-none"></canvas>
 
-        <form hx-post="/register" hx-swap="none" id="register-form" class="space-y-6">
-            <div>
-                <label class="block text-sm font-medium text-slate-300 mb-2">Full Name</label>
-                <input type="text" name="full_name" required
-                    class="w-full bg-slate-900/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all placeholder:text-slate-600"
-                    placeholder="e.g. Aditi Sharma">
-            </div>
+    <div class="relative z-10 w-full max-w-md">
+        <div class="glass w-full max-w-md p-8 rounded-2xl shadow-2xl border border-white/10">
+            <h2
+                class="text-3xl font-bold text-center mb-2 bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-purple-400">
+                Join NyayaSetu</h2>
+            <p class="text-slate-400 text-center mb-8">Create your account to access personalized legal aid.</p>
 
-            <div>
-                <label class="block text-sm font-medium text-slate-300 mb-2">Email Address</label>
-                <input type="email" name="email" required
-                    class="w-full bg-slate-900/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all placeholder:text-slate-600"
-                    placeholder="you@example.com">
-            </div>
+            <form hx-post="/register" hx-swap="none" id="register-form" class="space-y-6">
+                <div>
+                    <label class="block text-sm font-medium text-slate-300 mb-2">Full Name</label>
+                    <input type="text" name="full_name" required
+                        class="w-full bg-slate-900/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all placeholder:text-slate-600"
+                        placeholder="e.g. Aditi Sharma">
+                </div>
 
-            <div>
-                <label class="block text-sm font-medium text-slate-300 mb-2">Password</label>
-                <input type="password" name="password" required
-                    class="w-full bg-slate-900/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all placeholder:text-slate-600"
-                    placeholder="••••••••">
-            </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-300 mb-2">Email Address</label>
+                    <input type="email" name="email" required
+                        class="w-full bg-slate-900/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all placeholder:text-slate-600"
+                        placeholder="you@example.com">
+                </div>
 
-            <div>
-                <label class="block text-sm font-medium text-slate-300 mb-2">Preferred Language</label>
-                <select name="preferred_language"
-                    class="w-full bg-slate-900/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all [&>*]:bg-slate-900">
-                    <option value="en">English</option>
-                    <option value="hi">Hindi (हिंदी)</option>
-                    <option value="bn">Bengali (বাংলা)</option>
-                    <option value="te">Telugu (తెలుగు)</option>
-                </select>
-            </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-300 mb-2">Password</label>
+                    <input type="password" name="password" required
+                        class="w-full bg-slate-900/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all placeholder:text-slate-600"
+                        placeholder="••••••••">
+                </div>
 
-            <button type="submit"
-                class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold py-3 px-4 rounded-xl shadow-lg shadow-indigo-500/20 transition-all transform hover:scale-[1.02]">
-                Create Account
-            </button>
-        </form>
+                <div>
+                    <label class="block text-sm font-medium text-slate-300 mb-2">Preferred Language</label>
+                    <select name="preferred_language"
+                        class="w-full bg-slate-900/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all [&>*]:bg-slate-900">
+                        <option value="en">English</option>
+                        <option value="hi">Hindi (हिंदी)</option>
+                        <option value="bn">Bengali (বাংলা)</option>
+                        <option value="te">Telugu (తెలుగు)</option>
+                    </select>
+                </div>
 
-        <p class="mt-6 text-center text-slate-400 text-sm">
-            Already have an account? <a href="/login" class="text-indigo-400 hover:text-indigo-300 font-medium">Log
-                in</a>
-        </p>
+                <button type="submit"
+                    class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold py-3 px-4 rounded-xl shadow-lg shadow-indigo-500/20 transition-all transform hover:scale-[1.02]">
+                    Create Account
+                </button>
+            </form>
 
-        <!-- Error/Success Message Container -->
-        <div id="message" class="mt-4 text-center text-sm hidden"></div>
+            <p class="mt-6 text-center text-slate-400 text-sm">
+                Already have an account? <a href="/login" class="text-indigo-400 hover:text-indigo-300 font-medium">Log
+                    in</a>
+            </p>
 
+            <!-- Error/Success Message Container -->
+            <div id="message" class="mt-4 text-center text-sm hidden"></div>
+
+        </div>
     </div>
 </div>
 
@@ -87,4 +92,6 @@
         }
     });
 </script>
+</script>
+<script src="/static/js/particles.js"></script>
 {% endblock %}

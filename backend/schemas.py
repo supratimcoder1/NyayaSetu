@@ -35,3 +35,8 @@ class Token(BaseModel):
 
 class TokenData(BaseModel):
     email: Optional[str] = None
+
+class ContactRequest(BaseModel):
+    name: str
+    email: EmailStr
+    message: str

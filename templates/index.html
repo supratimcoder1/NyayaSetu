@@ -1,176 +1,362 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="flex flex-col items-center justify-center space-y-10">
-    <!-- Hero Section -->
-    <div class="text-center space-y-6 max-w-3xl mx-auto animate-fade-in-down">
+<div class="relative min-h-screen overflow-hidden">
+    <!-- Dynamic Background -->
+    <canvas id="bg-canvas" class="absolute inset-0 w-full h-full z-0 pointer-events-none"></canvas>
+
+    <div class="relative z-10 flex flex-col items-center justify-center space-y-20 py-10">
+        <!-- Hero Section -->
+        <div class="text-center space-y-6 max-w-3xl mx-auto animate-fade-in-down">
+            <div
+                class="inline-flex items-center px-3 py-1 rounded-full border border-indigo-500/30 bg-indigo-500/10 text-indigo-300 text-xs font-medium mb-2">
+                <span class="flex h-2 w-2 rounded-full bg-indigo-400 mr-2 animate-pulse"></span>
+                Powered by Gemini
+            </div>
+            <h1 class="text-5xl md:text-7xl font-bold tracking-tight text-white mb-4">
+                Justice <span
+                    class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400">Simplified</span>.
+            </h1>
+            <p class="text-xl text-slate-400 max-w-2xl mx-auto leading-relaxed h-16 md:h-20">
+                <span id="typewriter-text"></span><span id="cursor" class="text-indigo-400 font-bold">|</span>
+            </p>
+        </div>
+
+        <!-- Chat Container -->
         <div
-            class="inline-flex items-center px-3 py-1 rounded-full border border-indigo-500/30 bg-indigo-500/10 text-indigo-300 text-xs font-medium mb-2">
-            <span class="flex h-2 w-2 rounded-full bg-indigo-400 mr-2 animate-pulse"></span>
-            Powered by Gemini
-        </div>
-        <h1 class="text-5xl md:text-7xl font-bold tracking-tight text-white mb-4">
-            Justice <span
-                class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400">Simplified</span>.
-        </h1>
-        <p class="text-xl text-slate-400 max-w-2xl mx-auto leading-relaxed">
-            Navigate the complexities of Indian Law, BNS, and the Constitution with confidence.
-        </p>
-    </div>
+            class="w-full glass rounded-3xl overflow-hidden shadow-2xl shadow-black/50 ring-1 ring-white/10 animate-fade-in-up delay-100 relative">
+            <!-- Glow backing -->
+            <div
+                class="absolute -top-40 -right-40 w-80 h-80 bg-purple-500/20 rounded-full blur-3xl pointer-events-none">
+            </div>
+            <div
+                class="absolute -bottom-40 -left-40 w-80 h-80 bg-indigo-500/20 rounded-full blur-3xl pointer-events-none">
+            </div>
 
-    <!-- Chat Container -->
-    <div
-        class="w-full glass rounded-3xl overflow-hidden shadow-2xl shadow-black/50 ring-1 ring-white/10 animate-fade-in-up delay-100 relative">
-        <!-- Glow backing -->
-        <div class="absolute -top-40 -right-40 w-80 h-80 bg-purple-500/20 rounded-full blur-3xl pointer-events-none">
-        </div>
-        <div class="absolute -bottom-40 -left-40 w-80 h-80 bg-indigo-500/20 rounded-full blur-3xl pointer-events-none">
-        </div>
-
-        <!-- Chat History -->
-        <div id="chat-history"
-            class="h-[500px] overflow-y-auto p-8 space-y-6 scroll-smooth relative z-10 custom-scrollbar">
-            <!-- Initial Welcome Message -->
-            <div class="flex justify-start">
-                <div class="flex gap-4 max-w-3xl">
-                    <div
-                        class="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg flex-shrink-0">
-                        <!-- Scale Icon (Nyaya) -->
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none"
-                            viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" />
-                        </svg>
+            <!-- Chat History -->
+            <div id="chat-history"
+                class="h-[500px] overflow-y-auto p-8 space-y-6 scroll-smooth relative z-10 custom-scrollbar">
+                <!-- Initial Welcome Message -->
+                <div class="flex justify-start">
+                    <div class="flex gap-4 max-w-3xl">
+                        <div
+                            class="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg flex-shrink-0">
+                            <!-- Scale Icon (Nyaya) -->
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none"
+                                viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" />
+                            </svg>
+                        </div>
+                        <div
+                            class="glass bg-slate-800/50 text-slate-200 rounded-2xl rounded-tl-none px-6 py-4 shadow-sm border-0">
+                            <p>Namaste! I'm NyayaSetu, your AI legal companion.</p>
+                            <p class="mt-2 text-sm text-slate-400">You can ask me about:</p>
+                            <ul class="list-disc list-inside mt-1 text-sm text-slate-400 space-y-1">
+                                <li>Fundamental Rights in the Constitution</li>
+                                <li>Changes in the new Bharatiya Nyaya Sanhita</li>
+                                <li>Legal procedures for common issues</li>
+                            </ul>
+                        </div>
                     </div>
+                </div>
+            </div>
+
+            <!-- Input Area -->
+            <div class="p-6 bg-slate-900/60 backdrop-blur-md border-t border-white/5 relative z-20">
+                <form id="chat-form" class="relative max-w-4xl mx-auto">
+                    <div class="relative group">
+                        <div
+                            class="absolute -inset-0.5 bg-gradient-to-r from-pink-600 to-purple-600 rounded-xl opacity-20 group-hover:opacity-40 transition duration-500 blur">
+                        </div>
+                        <div class="relative flex items-center bg-slate-950 rounded-xl">
+                            <input type="text" id="user-input" name="message"
+                                class="w-full bg-transparent text-white placeholder-slate-500 pl-6 pr-32 py-4 border-none focus:ring-0 text-lg"
+                                placeholder="Describe your legal query..." required autocomplete="off">
+
+                            <!-- Actions -->
+                            <div class="absolute right-2 flex items-center gap-2">
+                                <button type="button" id="voice-btn"
+                                    class="p-2 text-slate-400 hover:text-indigo-400 transition-colors rounded-lg hover:bg-white/5"
+                                    title="Voice Input">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none"
+                                        viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                                    </svg>
+                                </button>
+                                <span id="listening-indicator" class="hidden flex h-3 w-3 relative">
+                                    <span
+                                        class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                    <span class="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+                                </span>
+                                <button type="submit" id="send-btn"
+                                    class="bg-indigo-600 hover:bg-indigo-500 text-white p-3 rounded-lg shadow-lg shadow-indigo-500/30 transition-all transform active:scale-95">
+                                    <!-- Default Send Icon -->
+                                    <svg id="icon-send" xmlns="http://www.w3.org/2000/svg"
+                                        class="h-5 w-5 transform rotate-90" viewBox="0 0 20 20" fill="currentColor">
+                                        <path
+                                            d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" />
+                                    </svg>
+                                    <!-- Stop Icon (Hidden by default) -->
+                                    <svg id="icon-stop" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 hidden"
+                                        viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M6 6h12v12H6z" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+                <p class="text-center text-xs text-slate-600 mt-3">AI responses can be inaccurate. Please consult a
+                    qualified lawyer.</p>
+            </div>
+        </div>
+        <!-- Features Section (The Power Suite) -->
+        <div class="w-full max-w-6xl mx-auto py-20 reveal">
+            <h2 class="text-3xl font-bold text-center text-white mb-12">The <span
+                    class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400">Power
+                    Suite</span>
+            </h2>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <!-- Card 1: Nyaya Sahayak -->
+                <div
+                    class="group relative bg-slate-900/40 border border-white/5 rounded-2xl p-6 hover:border-indigo-500/30 transition-all hover:-translate-y-1 hover:shadow-lg hover:shadow-indigo-500/10 overflow-hidden">
                     <div
-                        class="glass bg-slate-800/50 text-slate-200 rounded-2xl rounded-tl-none px-6 py-4 shadow-sm border-0">
-                        <p>Namaste! I'm NyayaSetu, your AI legal companion.</p>
-                        <p class="mt-2 text-sm text-slate-400">You can ask me about:</p>
-                        <ul class="list-disc list-inside mt-1 text-sm text-slate-400 space-y-1">
-                            <li>Fundamental Rights in the Constitution</li>
-                            <li>Changes in the new Bharatiya Nyaya Sanhita</li>
-                            <li>Legal procedures for common issues</li>
-                        </ul>
+                        class="absolute -inset-0.5 bg-gradient-to-br from-indigo-500 to-purple-600 opacity-0 group-hover:opacity-10 transition duration-500 blur">
+                    </div>
+                    <div class="relative z-10">
+                        <div
+                            class="w-12 h-12 bg-indigo-500/10 rounded-xl flex items-center justify-center mb-4 text-indigo-400 group-hover:scale-110 transition-transform">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                                stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                            </svg>
+                        </div>
+                        <h3 class="text-xl font-semibold text-white mb-2">Nyaya Sahayak</h3>
+                        <p class="text-sm text-slate-400">AI Legal Companion with 8+ language support and persistent
+                            memory.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Card 2: Samvidhan Setu -->
+                <div
+                    class="group relative bg-slate-900/40 border border-white/5 rounded-2xl p-6 hover:border-indigo-500/30 transition-all hover:-translate-y-1 hover:shadow-lg hover:shadow-indigo-500/10 overflow-hidden">
+                    <div
+                        class="absolute -inset-0.5 bg-gradient-to-br from-pink-500 to-rose-600 opacity-0 group-hover:opacity-10 transition duration-500 blur">
+                    </div>
+                    <div class="relative z-10">
+                        <div
+                            class="w-12 h-12 bg-pink-500/10 rounded-xl flex items-center justify-center mb-4 text-pink-400 group-hover:scale-110 transition-transform">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                                stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                        </div>
+                        <h3 class="text-xl font-semibold text-white mb-2">Samvidhan Setu</h3>
+                        <p class="text-sm text-slate-400">Decode complex legal documents and judgments instantly.</p>
+                    </div>
+                </div>
+
+                <!-- Card 3: NyayaBandhu -->
+                <div
+                    class="group relative bg-slate-900/40 border border-white/5 rounded-2xl p-6 hover:border-indigo-500/30 transition-all hover:-translate-y-1 hover:shadow-lg hover:shadow-indigo-500/10 overflow-hidden">
+                    <div
+                        class="absolute -inset-0.5 bg-gradient-to-br from-emerald-500 to-teal-600 opacity-0 group-hover:opacity-10 transition duration-500 blur">
+                    </div>
+                    <div class="relative z-10">
+                        <div
+                            class="w-12 h-12 bg-emerald-500/10 rounded-xl flex items-center justify-center mb-4 text-emerald-400 group-hover:scale-110 transition-transform">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                                stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                            </svg>
+                        </div>
+                        <h3 class="text-xl font-semibold text-white mb-2">NyayaBandhu</h3>
+                        <p class="text-sm text-slate-400">Essential legal forms templates library available 24/7.</p>
+                    </div>
+                </div>
+
+                <!-- Card 4: NagrikSahayak -->
+                <div
+                    class="group relative bg-slate-900/40 border border-white/5 rounded-2xl p-6 hover:border-indigo-500/30 transition-all hover:-translate-y-1 hover:shadow-lg hover:shadow-indigo-500/10 overflow-hidden">
+                    <div
+                        class="absolute -inset-0.5 bg-gradient-to-br from-orange-500 to-amber-600 opacity-0 group-hover:opacity-10 transition duration-500 blur">
+                    </div>
+                    <div class="relative z-10">
+                        <div
+                            class="w-12 h-12 bg-orange-500/10 rounded-xl flex items-center justify-center mb-4 text-orange-400 group-hover:scale-110 transition-transform">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                                stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                        </div>
+                        <h3 class="text-xl font-semibold text-white mb-2">NagrikSahayak</h3>
+                        <p class="text-sm text-slate-400">Step-by-step guides for bureaucratic processes (FIRs, RTIs).
+                        </p>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Input Area -->
-        <div class="p-6 bg-slate-900/60 backdrop-blur-md border-t border-white/5 relative z-20">
-            <form id="chat-form" class="relative max-w-4xl mx-auto">
-                <div class="relative group">
-                    <div
-                        class="absolute -inset-0.5 bg-gradient-to-r from-pink-600 to-purple-600 rounded-xl opacity-20 group-hover:opacity-40 transition duration-500 blur">
-                    </div>
-                    <div class="relative flex items-center bg-slate-950 rounded-xl">
-                        <input type="text" id="user-input" name="message"
-                            class="w-full bg-transparent text-white placeholder-slate-500 pl-6 pr-32 py-4 border-none focus:ring-0 text-lg"
-                            placeholder="Describe your legal query..." required autocomplete="off">
+        <!-- Contact Section -->
+        <div class="w-full max-w-3xl mx-auto py-20 reveal delay-200">
+            <h2 class="text-3xl font-bold text-center text-white mb-8">Get in <span class="text-indigo-400">Touch</span>
+            </h2>
 
-                        <!-- Actions -->
-                        <div class="absolute right-2 flex items-center gap-2">
-                            <button type="button" id="voice-btn"
-                                class="p-2 text-slate-400 hover:text-indigo-400 transition-colors rounded-lg hover:bg-white/5"
-                                title="Voice Input">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
-                                    stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
-                                </svg>
-                            </button>
-                            <span id="listening-indicator" class="hidden flex h-3 w-3 relative">
-                                <span
-                                    class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                                <span class="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
-                            </span>
-                            <button type="submit" id="send-btn"
-                                class="bg-indigo-600 hover:bg-indigo-500 text-white p-3 rounded-lg shadow-lg shadow-indigo-500/30 transition-all transform active:scale-95">
-                                <!-- Default Send Icon -->
-                                <svg id="icon-send" xmlns="http://www.w3.org/2000/svg"
-                                    class="h-5 w-5 transform rotate-90" viewBox="0 0 20 20" fill="currentColor">
-                                    <path
-                                        d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" />
-                                </svg>
-                                <!-- Stop Icon (Hidden by default) -->
-                                <svg id="icon-stop" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 hidden"
-                                    viewBox="0 0 24 24" fill="currentColor">
-                                    <path d="M6 6h12v12H6z" />
-                                </svg>
-                            </button>
+            <div class="glass p-8 rounded-3xl border border-white/10 shadow-2xl relative overflow-hidden">
+                <!-- Decor -->
+                <div
+                    class="absolute -top-20 -left-20 w-40 h-40 bg-indigo-500/20 rounded-full blur-3xl pointer-events-none">
+                </div>
+
+                <form id="contact-form" class="space-y-6 relative z-10">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-400 mb-2">Name</label>
+                            <input type="text" name="name" required
+                                class="w-full bg-slate-900/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all placeholder:text-slate-600"
+                                placeholder="John Doe">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-400 mb-2">Email</label>
+                            <input type="email" name="email" required
+                                class="w-full bg-slate-900/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all placeholder:text-slate-600"
+                                placeholder="john@example.com">
                         </div>
                     </div>
-                </div>
-            </form>
-            <p class="text-center text-xs text-slate-600 mt-3">AI responses can be inaccurate. Please consult a
-                qualified lawyer.</p>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-400 mb-2">Message</label>
+                        <textarea name="message" rows="4" required
+                            class="w-full bg-slate-900/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all placeholder:text-slate-600"
+                            placeholder="Your thoughts..."></textarea>
+                    </div>
+                    <button type="submit"
+                        class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold py-3 px-4 rounded-xl shadow-lg transition-all transform hover:scale-[1.02]">
+                        Send Message
+                    </button>
+                    <div id="contact-msg" class="text-center text-sm font-medium hidden"></div>
+                </form>
+            </div>
         </div>
+
+
     </div>
-</div>
 
-<!-- Debug: Cookie Reset Button (For Development) -->
-<button onclick="document.cookie = 'chat_count=; Max-Age=0; path=/;'; window.location.reload();"
-    class="fixed bottom-4 right-4 bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs px-2 py-1 rounded border border-red-500/20 z-50 transition-colors"
-    title="Reset Message Limit">
-    Reset Limit (Debug)
-</button>
+    <script>
+        // Contact Form Logic
+        const contactForm = document.getElementById('contact-form');
+        const contactMsg = document.getElementById('contact-msg');
 
-<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-<script>
-    const chatForm = document.getElementById('chat-form');
-    const chatHistory = document.getElementById('chat-history');
-    const userInput = document.getElementById('user-input');
-    const sendBtn = document.getElementById('send-btn');
-    const iconSend = document.getElementById('icon-send');
-    const iconStop = document.getElementById('icon-stop');
+        contactForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData.entries());
 
-    let abortController = null;
+            const btn = contactForm.querySelector('button');
+            const originalText = btn.textContent;
+            btn.disabled = true;
+            btn.textContent = "Sending...";
 
-    // Auto-resize animation helper
-    function scrollToBottom() {
-        chatHistory.scrollTo({ top: chatHistory.scrollHeight, behavior: 'smooth' });
-    }
+            try {
+                const response = await fetch('/contact', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
 
-    function toggleButtonState(isGenerating) {
-        if (isGenerating) {
-            iconSend.classList.add('hidden');
-            iconStop.classList.remove('hidden');
-            sendBtn.classList.replace('bg-indigo-600', 'bg-red-600');
-            sendBtn.classList.replace('hover:bg-indigo-500', 'hover:bg-red-500');
-            sendBtn.classList.replace('shadow-indigo-500/30', 'shadow-red-500/30');
-            userInput.disabled = true;
-            userInput.placeholder = "Generating response...";
-        } else {
-            iconSend.classList.remove('hidden');
-            iconStop.classList.add('hidden');
-            sendBtn.classList.replace('bg-red-600', 'bg-indigo-600');
-            sendBtn.classList.replace('hover:bg-red-500', 'hover:bg-indigo-500');
-            sendBtn.classList.replace('shadow-red-500/30', 'shadow-indigo-500/30');
-            userInput.disabled = false;
-            userInput.placeholder = "Describe your legal query...";
-            userInput.focus();
+                if (response.ok) {
+                    contactForm.reset();
+                    contactMsg.textContent = "Message sent successfully! We'll get back to you.";
+                    contactMsg.className = "text-center text-sm font-medium text-green-400 mt-4 block animate-pulse";
+                } else {
+                    throw new Error('Failed');
+                }
+            } catch (err) {
+                contactMsg.textContent = "Something went wrong. Please try again.";
+                contactMsg.className = "text-center text-sm font-medium text-red-400 mt-4 block";
+            } finally {
+                btn.disabled = false;
+                btn.textContent = originalText;
+                setTimeout(() => {
+                    contactMsg.classList.add('hidden');
+                }, 5000);
+            }
+        });
+
+    </script>
+
+    <!-- Debug: Cookie Reset Button (For Development) -->
+    <button onclick="document.cookie = 'chat_count=; Max-Age=0; path=/;'; window.location.reload();"
+        class="fixed bottom-4 right-4 bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs px-2 py-1 rounded border border-red-500/20 z-50 transition-colors"
+        title="Reset Message Limit">
+        Reset Limit (Debug)
+    </button>
+
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script>
+        const chatForm = document.getElementById('chat-form');
+        const chatHistory = document.getElementById('chat-history');
+        const userInput = document.getElementById('user-input');
+        const sendBtn = document.getElementById('send-btn');
+        const iconSend = document.getElementById('icon-send');
+        const iconStop = document.getElementById('icon-stop');
+
+        let abortController = null;
+
+        // Auto-resize animation helper
+        function scrollToBottom() {
+            chatHistory.scrollTo({ top: chatHistory.scrollHeight, behavior: 'smooth' });
         }
-    }
 
-    chatForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-
-        // If currently generating, abort
-        if (abortController) {
-            abortController.abort();
-            abortController = null;
-            return;
+        function toggleButtonState(isGenerating) {
+            if (isGenerating) {
+                iconSend.classList.add('hidden');
+                iconStop.classList.remove('hidden');
+                sendBtn.classList.replace('bg-indigo-600', 'bg-red-600');
+                sendBtn.classList.replace('hover:bg-indigo-500', 'hover:bg-red-500');
+                sendBtn.classList.replace('shadow-indigo-500/30', 'shadow-red-500/30');
+                userInput.disabled = true;
+                userInput.placeholder = "Generating response...";
+            } else {
+                iconSend.classList.remove('hidden');
+                iconStop.classList.add('hidden');
+                sendBtn.classList.replace('bg-red-600', 'bg-indigo-600');
+                sendBtn.classList.replace('hover:bg-red-500', 'hover:bg-indigo-500');
+                sendBtn.classList.replace('shadow-red-500/30', 'shadow-indigo-500/30');
+                userInput.disabled = false;
+                userInput.placeholder = "Describe your legal query...";
+                userInput.focus();
+            }
         }
 
-        const message = userInput.value.trim();
-        if (!message) return;
+        chatForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
 
-        // Start new generation
-        abortController = new AbortController();
-        toggleButtonState(true);
+            // If currently generating, abort
+            if (abortController) {
+                abortController.abort();
+                abortController = null;
+                return;
+            }
 
-        // User Message HTML
-        const userHtml = `
+            const message = userInput.value.trim();
+            if (!message) return;
+
+            // Start new generation
+            abortController = new AbortController();
+            toggleButtonState(true);
+
+            // User Message HTML
+            const userHtml = `
             <div class="flex justify-end animate-fade-in-up">
                 <div class="flex gap-4 max-w-3xl flex-row-reverse">
                     <div class="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center border border-white/10 flex-shrink-0">
@@ -185,13 +371,13 @@
             </div>
         `;
 
-        chatHistory.insertAdjacentHTML('beforeend', userHtml);
-        userInput.value = '';
-        scrollToBottom();
+            chatHistory.insertAdjacentHTML('beforeend', userHtml);
+            userInput.value = '';
+            scrollToBottom();
 
-        // Loading Indicator (Lightning Symbol)
-        const loadingId = 'loading-' + Date.now();
-        const loadingHtml = `
+            // Loading Indicator (Lightning Symbol)
+            const loadingId = 'loading-' + Date.now();
+            const loadingHtml = `
             <div id="${loadingId}" class="flex justify-start animate-fade-in-up">
                  <div class="flex gap-4 max-w-3xl">
                     <div class="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg flex-shrink-0">
@@ -210,27 +396,27 @@
                 </div>
             </div>
         `;
-        chatHistory.insertAdjacentHTML('beforeend', loadingHtml);
-        scrollToBottom();
+            chatHistory.insertAdjacentHTML('beforeend', loadingHtml);
+            scrollToBottom();
 
-        try {
-            const response = await fetch('/chat', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ message: message }),
-                signal: abortController.signal
-            });
-            const data = await response.json();
+            try {
+                const response = await fetch('/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: message }),
+                    signal: abortController.signal
+                });
+                const data = await response.json();
 
-            // Remove loading
-            document.getElementById(loadingId).remove();
+                // Remove loading
+                document.getElementById(loadingId).remove();
 
-            // Parse Markdown
-            const parsedResponse = marked.parse(data.response);
+                // Parse Markdown
+                const parsedResponse = marked.parse(data.response);
 
-            // Container for Typewriter Effect
-            const typeId = 'type-' + Date.now();
-            const botHtml = `
+                // Container for Typewriter Effect
+                const typeId = 'type-' + Date.now();
+                const botHtml = `
                 <div class="flex justify-start animate-fade-in-up">
                     <div class="flex gap-4 max-w-3xl">
                         <div class="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg flex-shrink-0">
@@ -247,44 +433,44 @@
                     </div>
                 </div>
             `;
-            chatHistory.insertAdjacentHTML('beforeend', botHtml);
+                chatHistory.insertAdjacentHTML('beforeend', botHtml);
 
-            // Typewriter Logic
-            // Render Instant Response (No Typewriter)
-            const targetEl = document.getElementById(typeId);
-            targetEl.innerHTML = parsedResponse;
+                // Typewriter Logic
+                // Render Instant Response (No Typewriter)
+                const targetEl = document.getElementById(typeId);
+                targetEl.innerHTML = parsedResponse;
 
-        } catch (error) {
-            document.getElementById(loadingId)?.remove();
+            } catch (error) {
+                document.getElementById(loadingId)?.remove();
 
-            if (error.name === 'AbortError') {
-                chatHistory.insertAdjacentHTML('beforeend', `
+                if (error.name === 'AbortError') {
+                    chatHistory.insertAdjacentHTML('beforeend', `
                     <div class="flex justify-start animate-fade-in-up">
                          <div class="bg-yellow-500/10 border border-yellow-500/50 text-yellow-200 rounded-lg px-4 py-2 text-sm">
                             Response generation stopped by user.
                         </div>
                     </div>
                 `);
-            } else {
-                console.error('Error:', error);
-                chatHistory.insertAdjacentHTML('beforeend', `
+                } else {
+                    console.error('Error:', error);
+                    chatHistory.insertAdjacentHTML('beforeend', `
                     <div class="flex justify-start animate-fade-in-up">
                          <div class="bg-red-500/10 border border-red-500/50 text-red-200 rounded-lg px-4 py-2">
                             System Error: Please check connection.
                         </div>
                     </div>
                 `);
+                }
+            } finally {
+                abortController = null;
+                toggleButtonState(false);
+                scrollToBottom();
             }
-        } finally {
-            abortController = null;
-            toggleButtonState(false);
-            scrollToBottom();
-        }
-    });
+        });
 
-    // Custom CSS for animations and scrollbar
-    const style = document.createElement('style');
-    style.innerHTML = `
+        // Custom CSS for animations and scrollbar
+        const style = document.createElement('style');
+        style.innerHTML = `
         @keyframes fadeInUp {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
@@ -301,7 +487,83 @@
         .custom-scrollbar::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.02); }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 10px; }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.2); }
+
+        /* Reveal Animation Classes */
+        .reveal {
+            opacity: 0;
+            transform: translateY(80px);
+            transition: all 1.0s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .delay-100 { transition-delay: 0.1s; }
+        .delay-200 { transition-delay: 0.2s; }
+        .delay-300 { transition-delay: 0.3s; }
     `;
-    document.head.appendChild(style);
-</script>
-{% endblock %}
+        document.head.appendChild(style);
+
+        // --- Scroll Reveal Logic ---
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('active');
+                }
+            });
+        }, { threshold: 0.1 });
+
+        document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+
+        // --- Hero Typewriter Effect ---
+        const typewriterText = document.getElementById('typewriter-text');
+        const phrases = [
+            "Navigate the complexities of Indian Law and BNS.",
+            "Master the Constitution with confidence.",
+            "Simplify legal documents and understand your rights instantly.",
+            "Your 24/7 AI Legal Companion for expert guidance."
+        ];
+
+        let phraseIndex = 0;
+        let charIndex = 0;
+        let isDeleting = false;
+        let typeSpeed = 50;
+
+        function typeWriter() {
+            const currentPhrase = phrases[phraseIndex];
+
+            if (isDeleting) {
+                typewriterText.textContent = currentPhrase.substring(0, charIndex - 1);
+                charIndex--;
+                typeSpeed = 30; // Faster deleting
+            } else {
+                typewriterText.textContent = currentPhrase.substring(0, charIndex + 1);
+                charIndex++;
+                typeSpeed = 50; // Normal typing
+            }
+
+            if (!isDeleting && charIndex === currentPhrase.length) {
+                isDeleting = true;
+                typeSpeed = 2000; // Pause at end
+            } else if (isDeleting && charIndex === 0) {
+                isDeleting = false;
+                phraseIndex = (phraseIndex + 1) % phrases.length;
+                typeSpeed = 500; // Pause before new phrase
+            }
+
+            setTimeout(typeWriter, typeSpeed);
+        }
+
+        // Start after slight delay
+        setTimeout(typeWriter, 1000);
+
+        // Cursor Blink Animation
+        const cursor = document.getElementById('cursor');
+        setInterval(() => {
+            cursor.style.opacity = cursor.style.opacity === '0' ? '1' : '0';
+        }, 500);
+
+    </script>
+    <script src="/static/js/particles.js"></script>
+    {% endblock %}
