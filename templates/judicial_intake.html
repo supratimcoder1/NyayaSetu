@@ -24,25 +24,23 @@
                     <label class="block text-sm font-medium text-slate-400 mb-2" data-i18n="case_type">Case Type</label>
                     <select name="case_type" required
                         class="w-full bg-slate-900/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-amber-500 transition-all">
-                        <option value="Criminal">Criminal</option>
                         <option value="Civil">Civil</option>
+                        <option value="Criminal">Criminal</option>
                         <option value="Family">Family</option>
                         <option value="Corporate">Corporate</option>
                     </select>
                 </div>
             </div>
+
             <div>
-                <label class="block text-sm font-medium text-slate-400 mb-2" data-i18n="current_stage">Current
-                    Stage</label>
-                <select name="current_stage" required
-                    class="w-full bg-slate-900/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-amber-500 transition-all">
-                    <option value="Filing">Filing</option>
-                    <option value="Hearing">Hearing</option>
-                    <option value="Arguments">Arguments</option>
-                    <option value="Judgment">Judgment</option>
-                    <option value="Appeal">Appeal</option>
-                </select>
+                <label class="block text-sm font-medium text-slate-400 mb-2">Case Description (Optional)</label>
+                <textarea name="description" rows="4"
+                    class="w-full bg-slate-900/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-amber-500 transition-all"
+                    placeholder="Provide brief details about the case..."></textarea>
             </div>
+
+            <!-- Hidden Default Stage -->
+            <input type="hidden" name="current_stage" value="Pre-Filing">
 
             <button type="submit"
                 class="w-full bg-gradient-to-r from-amber-600 to-yellow-600 hover:from-amber-500 hover:to-yellow-500 text-white font-bold py-3 px-4 rounded-xl shadow-lg transition-all transform hover:scale-[1.02]"
@@ -58,8 +56,14 @@
     document.getElementById('intake-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         const formData = new FormData(e.target);
-        const data = Object.fromEntries(formData.entries());
-        data.status = "Open"; // Default
+        // Convert to JSON object
+        const data = {
+            title: formData.get('title'),
+            description: formData.get('description'),
+            case_type: formData.get('case_type'),
+            current_stage: "Pre-Filing",
+            status: "Open"
+        };
 
         const msg = document.getElementById('msg');
 

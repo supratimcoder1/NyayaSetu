@@ -70,11 +70,25 @@ class CaseStatus(str, enum.Enum):
     PENDING = "Pending"
 
 class CaseStage(str, enum.Enum):
+    PRE_FILING = "Pre-Filing"
     FILING = "Filing"
+    NOTICE_ISSUED = "Notice Issued"
+    WRITTEN_STATEMENT = "Written Statement"
+    EVIDENCE_SUBMISSION = "Evidence Submission"
     HEARING = "Hearing"
     ARGUMENTS = "Arguments"
     JUDGMENT = "Judgment"
+    EXECUTION = "Execution"
+    CLOSED = "Closed"
     APPEAL = "Appeal"
+
+class CaseEventType(str, enum.Enum):
+    HEARING = "Hearing"
+    ORDER = "Order"
+    FILING = "Filing"
+    NOTICE = "Notice"
+    EVIDENCE = "Evidence"
+    OTHER = "Other"
 
 class Case(Base):
     __tablename__ = "cases"
@@ -82,9 +96,10 @@ class Case(Base):
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"))
     title = Column(String)
+    description = Column(Text, nullable=True) # New Field
     case_type = Column(String) # Enum
     status = Column(String, default=CaseStatus.OPEN) # Enum
-    current_stage = Column(String, default=CaseStage.FILING) # Enum
+    current_stage = Column(String, default=CaseStage.PRE_FILING) # Enum
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow)
 
@@ -100,7 +115,11 @@ class CaseEvent(Base):
     title = Column(String)
     date = Column(DateTime)
     description = Column(Text)
-    type = Column(String) # Hearing, Filing, Order
+    type = Column(String, default=CaseEventType.OTHER) # CaseEventType Enum
+    
+    # Event-Driven Logic Fields
+    stage_impact = Column(String, nullable=True) # If set, this event triggers a stage change (CaseStage Enum)
+    auto_advance = Column(Boolean, default=True) # Whether to auto-apply the stage change
 
     case = relationship("Case", back_populates="events")
 
@@ -110,8 +129,17 @@ class CaseDocument(Base):
     id = Column(Integer, primary_key=True, index=True)
     case_id = Column(Integer, ForeignKey("cases.id"))
     title = Column(String)
-    content = Column(Text) # Draft text content
-    doc_type = Column(String) # e.g., "Draft", "Reference"
+    content = Column(Text) # Extracted text or summary
+    doc_type = Column(String) # User-defined type e.g., "Draft", "Reference"
+    
+    # Enhanced File Handling
+    file_path = Column(String, nullable=True) # Path to stored file
+    mime_type = Column(String, nullable=True) # e.g., application/pdf
+    uploaded_at = Column(DateTime, default=datetime.utcnow)
+    ai_summary = Column(Text, nullable=True) # AI-generated summary
+    
+    # Optional Link to Event
+    event_id = Column(Integer, ForeignKey("case_events.id"), nullable=True)
 
     case = relationship("Case", back_populates="documents")
 

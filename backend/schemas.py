@@ -49,7 +49,9 @@ class CaseEventBase(BaseModel):
     title: str
     date: datetime
     description: Optional[str] = None
-    type: str
+    type: str = "Other"
+    stage_impact: Optional[str] = None
+    auto_advance: bool = True
 
 class CaseEventCreate(CaseEventBase):
     pass
@@ -63,8 +65,12 @@ class CaseEvent(CaseEventBase):
 
 class CaseDocumentBase(BaseModel):
     title: str
-    content: str
+    content: Optional[str] = None
     doc_type: str
+    ai_summary: Optional[str] = None
+    
+    # Note: file_path and other internal fields might not be needed in request/response always
+    # but let's include them for reading
 
 class CaseDocumentCreate(CaseDocumentBase):
     pass
@@ -72,15 +78,20 @@ class CaseDocumentCreate(CaseDocumentBase):
 class CaseDocument(CaseDocumentBase):
     id: int
     case_id: int
+    file_path: Optional[str] = None
+    mime_type: Optional[str] = None
+    uploaded_at: datetime
+    event_id: Optional[int] = None
 
     class Config:
         orm_mode = True
 
 class CaseBase(BaseModel):
     title: str
+    description: Optional[str] = None
     case_type: str
     status: Optional[str] = "Open"
-    current_stage: Optional[str] = "Filing"
+    current_stage: Optional[str] = "Pre-Filing"
 
 class CaseCreate(CaseBase):
     pass

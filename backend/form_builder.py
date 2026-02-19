@@ -15,8 +15,7 @@ def generate_draft(case_type: str, user_details: str, language: str = "en") -> s
     model = genai.GenerativeModel('gemini-2.5-flash')
 
     lang_map = {
-        "en": "English", "hi": "Hindi", "bn": "Bengali", "te": "Telugu", 
-        "ta": "Tamil", "mr": "Marathi"
+        "en": "English", "hi": "Hindi", "bn": "Bengali", "te": "Telugu"
     }
     target_lang = lang_map.get(language, "English")
 

@@ -2,7 +2,7 @@
 
 **Bridging the Gap Between Citizens and Justice.**
 
-NyayaSetu is an AI-powered legal assistant designed to simplify the Indian bureaucratic process and make the Constitution and laws (BSA, BNS, BNSS) accessible to every citizen in plain language. Built for the **IMPECTUS Hackathon**.
+NyayaSetu is an AI-powered legal assistant and case management system designed to democratize access to justice in India. It combines advanced Generative AI with a robust judicial workflow engine to help citizens navigate the legal system, manage civil cases, and understand complex laws (BNS, BNSS, BSA). Built for the **IMPECTUS Hackathon**.
 
 ![NyayaSetu Banner](static/nyayasetu_banner.png)
 
@@ -10,35 +10,42 @@ NyayaSetu is an AI-powered legal assistant designed to simplify the Indian burea
 
 ## 🚀 Key Features
 
-### 1. 🤖 AI Legal Chatbot ("Nyaya Sahayak")
-*   **Context-Aware**: Powered by **Gemini Pro** and **RAG (Retrieval Augmented Generation)** using ChromaDB.
-*   **Knowledge Base**: Trained on the **Bharatiya Nyaya Sanhita (BNS)**, **Bharatiya Nagarik Suraksha Sanhita (BNSS)**, **Bharatiya Sakshya AdhiNyam (BSA)** and the **Constitution of India**.
-*   **Multilingual**: Supports **Hindi, Bengali, Telugu**, and **English**.
-*   **Voice-First**: Integrated Speech-to-Text for accessibility.
+### 1. ⚖️ Judicial Management System (NEW)
+A full-featured platform for managing civil litigation lifecycles.
+*   **Event-Driven Workflow**: Automatically transitions cases through the Civil Procedure Code stages (Pre-Filing → Filing → Notice → Evidence → Judgment).
+*   **Dynamic Timeline**: Visualizes case progress and history.
+*   **AI Guidance**: Context-aware recommendations for the "Next Step" based on the current case stage.
+*   **Document Vault**: Securely store and manage case-related documents.
+*   **Intelligent Tracker**: Dashboard to monitor multiple cases simultaneously.
 
-### 2. 📄 Document Simplifier ("Samvidhan Setu")
-*   **"Explain Like I'm 5"**: Upload complex legal documents (PDF/Images) and get a summary so simple a 5-year-old could understand it.
-*   **Vision Capabilities**: Uses **Gemini Vision** to read scanned images and photos of documents.
-*   **Key Insights**: Extracts "Document Type", "What it Says", "Why it Matters", and "Action Required".
+### 2. 🤖 AI Legal Chatbot ("Nyaya Sahayak")
+*   **Legal Brain**: Fine-tuned on the **Bharatiya Nyaya Sanhita (BNS)**, **Bharatiya Nagarik Suraksha Sanhita (BNSS)**, and **Constitution of India**.
+*   **RAG Engine**: Uses Retrieval Augmented Generation to cite specific sections of the law.
+*   **Multilingual**: Supports **Hindi, English**, and regional languages.
+*   **Voice-Enabled**: Speak to the assistant in your native tongue.
 
-### 3. 📝 Forms & Bureaucracy Helper
-*   **Interactive Guidance**: Step-by-step help for navigating common government forms.
-*   **Smart Filling**: AI suggestions for completing complex bureaucratic fields.
+### 3. 📄 Samvidhan Setu (Document Simplifier)
+*   **"Explain Like I'm 5"**: Upload complex legal notices or court orders (PDF/Images) and get a simple, actionable summary.
+*   **Vision AI**: Analysis of scanned documents using Gemini Vision.
 
-### 4. 🔐 Robust & Secure
-*   **Secure Authentication**: Cookie-based authentication with `HttpOnly` cookies.
-*   **Sliding Sessions**: Smart session management that keeps you logged in while active (30-minute sliding window).
-*   **Admin Dashboard**: comprehensive view of user activity and system stats.
+### 4. 📝 Forms & Bureaucracy Helper
+*   **Smart Drafting**: Generate legal drafts (Affidavits, RTIs, Rental Agreements) instantly based on your inputs.
+*   **Form Guidance**: Step-by-step assistance for government applications.
+
+### 5. 🔐 Enterprise-Grade Security
+*   **Session Management**: Secure, sliding-window sessions.
+*   **Data Isolation**: Every user’s cases and chats are private.
+*   **Admin Dashboard**: Oversight of system usage and user metrics.
 
 ---
 
 ## 🛠️ Tech Stack
 
-*   **Backend**: Python 3.10.11, FastAPI
-*   **Frontend**: HTML5, Jinja2, Tailwind CSS (via CDN), Vanilla JS
-*   **AI Engine**: Google Gemini API (GenerativeLanguage)
-*   **Vector Database**: ChromaDB (Local persistence)
-*   **Database**: SQLite + SQLAlchemy (User data)
+*   **Backend**: Python 3.10+, FastAPI (Modular Router Architecture)
+*   **AI Engine**: Google Gemini 1.5 Pro & Flash
+*   **Vector Database**: ChromaDB (Local Persistence)
+*   **Database**: SQLite + SQLAlchemy (Relational Data)
+*   **Frontend**: HTML5, Jinja2, TailwindCSS, Vanilla JS
 
 ---
 
@@ -46,152 +53,72 @@ NyayaSetu is an AI-powered legal assistant designed to simplify the Indian burea
 
 ```text
 NyayaSetu/
-├── backend/          # FastAPI application & logic
-├── templates/        # Jinja2 HTML templates
-├── static/           # CSS, JS, Images
-├── data/             # Source PDF documents
-└── chroma_db_store/  # Vector embeddings database
+├── backend/
+│   ├── routers/        # Modular API Routes (Auth, Chat, Judicial, Tools)
+│   ├── models.py       # Database Schemas (User, Case, Chat, Events)
+│   ├── judicial_engine.py # Core Logic for Civil Workflow
+│   ├── rag_engine.py   # AI & Vector Search Logic
+│   └── main.py         # App Entry Point
+├── templates/          # Jinja2 HTML Pages
+├── static/             # Assets & Styles
+├── data/               # Legal Knowledge Base (PDFs)
+└── chroma_db_store/    # Embeddings
 ```
 
 ---
 
 ## ⚙️ Setup & Installation
 
-Follow these steps to set up the project locally:
-
-### 1. Clone the Repository
+### 1. Clone & Install
 ```bash
 git clone https://github.com/yourusername/NyayaSetu.git
 cd NyayaSetu
-```
-
-### 2. Install Dependencies
-It is recommended to use a virtual environment.
-```bash
 python -m venv venv
-# Windows:
-.\venv\Scripts\activate
-# Mac/Linux:
-source venv/bin/activate
-
+# Activate Venv (Windows: venv\Scripts\activate, Mac/Linux: source venv/bin/activate)
 pip install -r requirements.txt
 ```
 
-### 3. Configure Environment
-Create a `.env` file in the root directory:
+### 2. Configure Environment
+Create a `.env` file:
 ```env
-GEMINI_API_KEY=your_google_gemini_api_key_here
-SECRET_KEY=generate_a_secure_random_string_here
+GEMINI_API_KEY=your_key
+SECRET_KEY=your_secret
 ACCESS_TOKEN_EXPIRE_MINUTES=30
 ```
 
-### 4. Initialize Data
-Place your source PDF documents in the `data/` folder:
-
-*   `data/BSA_2023.pdf`
-*   `data/BNS_2023.pdf`
-*   `data/BNSS_2023.pdf`
-*   `data/constitution.pdf`
-
-Run the ingestion script to build the vector database (this may take a few minutes):
+### 3. Initialize Knowledge Base
+(Only needed once)
 ```bash
 python backend/ingest.py
 ```
-*(Note: You only need to run this once or whenever you add new documents.)*
 
-### 5. Run the Server
+### 4. Run the Platform
 ```bash
 uvicorn backend.main:app --reload
 ```
-The application will be available at: **http://localhost:8000**
+Visit **http://localhost:8000**
 
 ---
 
-## 🧪 Testing/Debugging
-*   **API Docs**: Visit `http://localhost:8000/docs` for the automatic Swagger UI.
-*   **Reset Chat Limit**: A debug button is available on the landing page (bottom-right) to reset the free chat limit cookie.
-*   **Admin Panel**: Access via `/admin-dashboard` (requires login).
+## 🧪 Testing
 
-### ❓ Troubleshooting
-
-*   **Login Issues**: If you get stuck, try clearing your browser cookies.
-*   **API Errors**: Ensure `GEMINI_API_KEY` is set correctly in `.env`.
-*   **Database Locks**: If the DB acts up, you can safely delete `nyayasetu.db` (it will auto-regenerate).
-
-
-## 🛠️ Architecture
-
-```mermaid
-graph TD
-    subgraph Client
-        UI[💻 Web Interface]
-        Voice[🎙️ Voice Input]
-    end
-
-    subgraph "Application Server"
-        API[⚙️ FastAPI Backend]
-        Auth[🔐 Auth & Sessions]
-        RAG[🔍 RAG Engine]
-    end
-
-    subgraph "External Services"
-        Gemini[🧠 Gemini Pro]
-        GCloud[☁️ Google Cloud APIs]
-    end
-
-    subgraph Data
-        VDB[(🗄️ FAISS Vector Store)]
-        SQL[(💾 SQLite User DB)]
-        Docs[📄 Legal Documents]
-    end
-
-    UI --> API
-    Voice --> API
-    API --> Auth
-    API --> RAG
-    RAG --> VDB
-    RAG --> Gemini
-    API --> GCloud
-    Auth --> SQL
-    VDB -.-> Docs
-```
-
-## 🔄 User Journey
-
-```mermaid
-sequenceDiagram
-    participant User as 👤 Citizen
-    participant FE as 💻 NyayaSetu UI
-    participant BE as ⚙️ Backend (FastAPI)
-    participant VDB as 🗄️ Vector DB (FAISS)
-    participant AI as 🧠 Gemini AI
-
-    User->>FE: Ask Question (Voice/Text)
-    FE->>BE: Send Input
-    BE->>BE: Transcribe & Translate
-    BE->>VDB: Search for Legal Context
-    VDB-->>BE: Return Relevant Acts
-    BE->>AI: Send Query + Laws
-    AI-->>BE: Generate Simplified Answer
-    BE-->>FE: Return AI Response
-    FE-->>User: Display & Speak Answer
-```
-
-## 🚀 Future Roadmap
-- **Hyper-Local Legal Aid**: Integration with State-specific laws.
-- **Pro-Bono Lawyer Marketplace**: Connect identifying pro-bono lawyers.
-- **Offline Mode**: TinyML for basic queries.
+*   **Default Login**: Register a new user or use `admin@nyaya.com` / `admin123` (if seeded).
+*   **Verification**:
+    *   **Judicial**: Create a case → Add "Filing" Event → Verify Stage changes to "Filing".
+    *   **Chat**: Ask "What is the punishment for theft under BNS?".
+    *   **Draft**: Go to Tools → Generate Draft -> "Rental Agreement for 11 months".
 
 ---
-
-
 
 ## 🤝 Contribution
-1.  Fork the repo.
-2.  Create a feature branch (`git checkout -b feature-name`).
-3.  Commit your changes (`git commit -m "Added cool feature"`).
-4.  Push to the branch (`git push origin feature-name`).
-5.  Open a Pull Request.
+
+We welcome contributions! Please follow the `backend/routers` pattern when adding new API endpoints.
+
+```bash
+git checkout -b feature/amazing-feature
+git commit -m "Add Amazing Feature"
+git push origin feature/amazing-feature
+```
 
 ---
-
+*Built with ❤️ for Justice.*
