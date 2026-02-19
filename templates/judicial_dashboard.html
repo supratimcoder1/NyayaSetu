@@ -1,0 +1,86 @@
+{% extends "dashboard_base.html" %}
+
+{% block content %}
+<div class="space-y-8">
+    <!-- Hero Header -->
+    <div
+        class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-slate-900 to-slate-800 border border-white/10 p-8 md:p-12">
+        <div
+            class="absolute top-0 right-0 -mt-20 -mr-20 w-80 h-80 bg-amber-500/20 rounded-full blur-3xl pointer-events-none">
+        </div>
+        <div class="relative z-10 max-w-2xl">
+            <div
+                class="inline-flex items-center px-3 py-1 rounded-full border border-amber-500/30 bg-amber-500/10 text-amber-300 text-xs font-medium mb-4">
+                <span class="flex h-2 w-2 rounded-full bg-amber-400 mr-2 animate-pulse"></span>
+                Judicial Module
+            </div>
+            <h1 class="text-3xl md:text-5xl font-bold text-white mb-4">
+                Case Management
+            </h1>
+            <p class="text-lg text-slate-300 mb-8">
+                Manage your legal cases, track hearings, and get AI-driven procedural guidance.
+            </p>
+            <div class="flex flex-wrap gap-4">
+                <button onclick="alert('Case creation coming in Phase 3')"
+                    class="bg-amber-600 hover:bg-amber-500 text-white font-bold py-3 px-6 rounded-xl shadow-lg shadow-amber-500/20 transition-transform hover:scale-105 flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                    </svg>
+                    <span>File New Case</span>
+                </button>
+                <button onclick="alert('Coming soon')"
+                    class="glass text-white hover:bg-white/10 font-bold py-3 px-6 rounded-xl border border-white/20 transition-all flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                    </svg>
+                    <span>My Active Cases</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Access Modules -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Timeline Tool -->
+        <div
+            class="bg-slate-900/50 border border-white/5 rounded-2xl p-6 hover:border-amber-500/50 transition-all hover:bg-slate-800 relative overflow-hidden group">
+            <div
+                class="absolute inset-0 bg-gradient-to-br from-amber-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+            </div>
+            <div class="relative z-10">
+                <div class="w-12 h-12 bg-amber-500/20 text-amber-400 rounded-xl flex items-center justify-center mb-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </div>
+                <h3 class="text-xl font-bold text-white mb-2">Case Timeline</h3>
+                <p class="text-sm text-slate-400">Visualize the lifecycle of your case and anticipate next steps.</p>
+            </div>
+        </div>
+
+        <!-- Evidence Locker -->
+        <div
+            class="bg-slate-900/50 border border-white/5 rounded-2xl p-6 hover:border-amber-500/50 transition-all hover:bg-slate-800 relative overflow-hidden group">
+            <div
+                class="absolute inset-0 bg-gradient-to-br from-amber-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+            </div>
+            <div class="relative z-10">
+                <div class="w-12 h-12 bg-amber-500/20 text-amber-400 rounded-xl flex items-center justify-center mb-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+                    </svg>
+                </div>
+                <h3 class="text-xl font-bold text-white mb-2">Evidence Locker</h3>
+                <p class="text-sm text-slate-400">Securely store and organize your case-related documents.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

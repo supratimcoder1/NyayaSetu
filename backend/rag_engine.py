@@ -7,22 +7,18 @@ import google.generativeai as genai
 import chromadb
 from .config import settings
 from .prompt_templates import SYSTEM_PROMPT
+from . import models, judicial_engine
 import time
 import logging
 
-
-
-# Configure Logging
+# ... (Logging setup remains same) ...
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Global Memory Bank Removed - History is now passed per request
-
-
-# Configure Gemini
+# ... (Gemini/Chroma setup remains same) ...
 if settings.GEMINI_API_KEY:
     genai.configure(api_key=settings.GEMINI_API_KEY)
-    model = genai.GenerativeModel('gemini-2.5-flash')
+# ...
 
 # Initialize Chroma Client
 chroma_client = chromadb.PersistentClient(path=settings.CHROMA_DB_DIR)
@@ -30,10 +26,7 @@ collection = chroma_client.get_or_create_collection(name="legal_docs")
 
 
 def transcribe_audio(audio_bytes, mime_type="audio/webm"):
-    """
-    Transcribes audio using Gemini's multimodal capabilities.
-    Auto-detects language (Hindi, Bengali, Telugu, English, etc).
-    """
+    # ... (remains same) ...
     if not settings.GEMINI_API_KEY:
         return "Error: GEMINI_API_KEY not found."
 
@@ -60,7 +53,7 @@ def transcribe_audio(audio_bytes, mime_type="audio/webm"):
     return "Error: Transcription failed with all available models."
 
 def get_query_embedding(text):
-    """Fetch query embeddings using Gemini API with retry logic"""
+   # ... (remains same) ...
     retries = 3
     for attempt in range(retries):
         try:
@@ -79,13 +72,41 @@ def get_query_embedding(text):
                 print(f"Error generating embedding: {e}")
                 return None
 
-def query_rag(query_text: str, history: list = None, language: str = "en"):
+def query_rag(query_text: str, history: list = None, language: str = "en", user=None, db=None):
     if not settings.GEMINI_API_KEY:
         return "Error: GEMINI_API_KEY not found in .env settings."
 
-    # 1. Embed the query
+    # --- INTENT DETECTION (Phase 4) ---
+    judicial_context = ""
+    is_judicial_query = False
+    
+    # Simple keyword-based intent detection
+    judicial_keywords = ["my case", "case status", "hearing", "file a case", "my lawsuit", "court date", "next step"]
+    if any(k in query_text.lower() for k in judicial_keywords):
+        is_judicial_query = True
+        
+    if is_judicial_query and user and db:
+        # Fetch User's Cases
+        user_cases = db.query(models.Case).filter(models.Case.user_id == user.id).all()
+        
+        if user_cases:
+            judicial_context = "\nUSER'S ACTIVE LEGAL CASES:\n"
+            for case in user_cases:
+                judicial_context += f"- Case ID: {case.id} | Title: {case.title} | Type: {case.case_type} | Status: {case.status} | Stage: {case.current_stage}\n"
+                
+                # Add timeline info if specific case asked
+                if str(case.id) in query_text or case.title.lower() in query_text.lower():
+                     timeline = judicial_engine.generate_timeline(case.case_type)
+                     next_step = judicial_engine.recommend_next_step(case.current_stage, case.case_type)
+                     judicial_context += f"  - Recommended Next Step: {next_step}\n"
+                     judicial_context += f"  - Standard Timeline: {[t['stage'] for t in timeline]}\n"
+        else:
+            judicial_context = "\nUSER'S CASES: No active cases found for this user.\n"
+
+    # 1. Embed the query (Standard RAG)
+    # Even for judicial queries, we might need legal context (e.g. "What implies Section 420 for my case?")
     try:
-        query_embedding = get_query_embedding(query_text) # Using existing get_query_embedding
+        query_embedding = get_query_embedding(query_text) 
     except Exception as e:
         return f"Error generating embedding: {str(e)}"
 
@@ -94,22 +115,21 @@ def query_rag(query_text: str, history: list = None, language: str = "en"):
     if query_embedding:
         try:
             results = collection.query(
-                query_embeddings=[query_embedding], # get_query_embedding returns a single embedding, so wrap in list
-                n_results=3,  # Top 3 chunks
+                query_embeddings=[query_embedding], 
+                n_results=3, 
                 include=['documents', 'metadatas']
             )
             
-            # Determine if we found valid results
             if results['documents'] and results['documents'][0]:
                 docs = results['documents'][0]
                 metas = results['metadatas'][0]
                 
-                # Format context with source citations
                 formatted_snippets = []
                 for i, doc in enumerate(docs):
                     source = metas[i].get('source', 'Unknown')
                     page = metas[i].get('page', '?')
-                    formatted_snippets.append(f"[Source: {source}, Page: {page}]\n{doc}")
+                    # Strict Citation (Phase 6)
+                    formatted_snippets.append(f"SOURCE: {source} (Page {page})\nCONTENT: {doc}")
                 context_text = "\n---\n".join(formatted_snippets)
             else:
                 context_text = "No specific relevant legal documents found in database."
@@ -135,8 +155,11 @@ def query_rag(query_text: str, history: list = None, language: str = "en"):
 
     full_prompt = f"""{SYSTEM_PROMPT}
 
-CONTEXT FROM LEGAL DOCUMENTS:
+CONTEXT FROM LEGAL DOCUMENTS (Primary Source):
 {context_text}
+
+JUDICIAL CASE CONTEXT (User's Personal Data):
+{judicial_context}
 
 {history_text}
 USER QUERY:
@@ -144,6 +167,9 @@ USER QUERY:
 
 IMPORTANT INSTRUCTION:
 Answer the above query in **{target_lang}** language.
+If the user asks about "my case", use the JUDICIAL CASE CONTEXT.
+If the user asks about laws, use the CONTEXT FROM LEGAL DOCUMENTS.
+Always cite your sources (e.g., "According to BNS Section X..." or "Based on your case file...").
 
 ANSWER:
 """
@@ -282,3 +308,116 @@ ANSWER:
         final_response_text = "I apologize, but all AI models are currently unavailable or busy. Please try again later."
     
     return final_response_text
+
+
+def query_judicial_rag(query_text: str, history: list = None, language: str = "en", user=None, db=None):
+    """
+    RAG Logic specifically for Judicial Procedural Guidance.
+    Prioritizes User's Case Data over general legal documents.
+    """
+    if not settings.GEMINI_API_KEY:
+        return "Error: GEMINI_API_KEY not found in .env settings."
+
+    # 1. Fetch User's Cases (Primary Data Source)
+    judicial_context = ""
+    user_cases = []
+    if user and db:
+        user_cases = db.query(models.Case).filter(models.Case.user_id == user.id).all()
+        
+        if user_cases:
+            judicial_context = "\nUSER'S ACTIVE LEGAL CASES:\n"
+            for case in user_cases:
+                judicial_context += f"- Case ID: {case.id} | Title: {case.title} | Type: {case.case_type} | Status: {case.status} | Stage: {case.current_stage}\n"
+                
+                # Add timeline/next steps if relevant to query
+                if str(case.id) in query_text or case.title.lower() in query_text.lower() or "my case" in query_text.lower():
+                     timeline = judicial_engine.generate_timeline(case.case_type)
+                     next_step = judicial_engine.recommend_next_step(case.current_stage, case.case_type)
+                     judicial_context += f"  - Recommended Next Step: {next_step}\n"
+                     # judicial_context += f"  - Standard Timeline: {[t['stage'] for t in timeline]}\n" # Timeline might be too long, add only if asked
+        else:
+            judicial_context = "\nUSER'S CASES: No active cases registered in the system.\n"
+
+    # 2. General Legal Context (Secondary Data Source - Only if needed)
+    # We still fetch this because the user might ask "How do I file a divorce case?" (General procedure)
+    context_text = ""
+    try:
+        query_embedding = get_query_embedding(query_text)
+        if query_embedding:
+            results = collection.query(
+                query_embeddings=[query_embedding], 
+                n_results=2, # Less context needed than main bot
+                include=['documents', 'metadatas']
+            )
+            if results['documents'] and results['documents'][0]:
+                 formatted_snippets = []
+                 for i, doc in enumerate(results['documents'][0]):
+                    source = results['metadatas'][0][i].get('source', 'Unknown')
+                    formatted_snippets.append(f"SOURCE: {source}\nCONTENT: {doc}")
+                 context_text = "\n---\n".join(formatted_snippets)
+    except Exception as e:
+        logger.warning(f"Judicial embedding failed: {e}")
+        context_text = "General legal database unavailable."
+
+    # 3. History
+    history_text = ""
+    if history:
+        history_text = "\nRECENT CONVERSATION HISTORY:\n"
+        for msg in history:
+            role = "User" if msg.get("role") == "user" else "Judicial Assistant"
+            history_text += f"{role}: {msg.get('content')}\n"
+
+    # 4. Prompt Construction
+    lang_map = {
+        "en": "English", "hi": "Hindi", "bn": "Bengali", "te": "Telugu", 
+        "ta": "Tamil", "mr": "Marathi", "kn": "Kannada", "ml": "Malayalam"
+    }
+    target_lang = lang_map.get(language, "English")
+
+    system_prompt = """You are the Judicial Procedural Guide of NyayaSetu.
+Your role is to assist users specifically with their court cases and procedural queries.
+You have access to their registered cases in the system.
+
+GUIDELINES:
+1. IF the user asks about "my case" and cases exist in context, REFER specifically to those cases by ID/Title.
+2. IF the user asks about "my case" but has NO cases, guide them on how to file a new case using the "Case Intake" module.
+3. IF the user asks general procedural questions (e.g. "How to get bail"), provide standard legal procedure steps using the General Legal Context.
+4. BE CONCISE and ACTION-ORIENTED. Focus on the "Next Step".
+5. Do not prioritize general legal theory over specific case status.
+6. Speak in a professional, empathetic, and authoritative judicial tone.
+"""
+
+    full_prompt = f"""{system_prompt}
+
+USER'S CASE DATA:
+{judicial_context}
+
+GENERAL LEGAL CONTEXT:
+{context_text}
+
+{history_text}
+USER QUERY:
+{query_text}
+
+IMPORTANT: Answer in **{target_lang}**.
+Formatted as Markdown.
+"""
+
+    # 5. Generate
+    # Using the same model list and fallback logic as query_rag
+    models_to_try = ['gemini-3-flash-preview', 'gemini-2.5-flash', 'gemini-1.5-flash']
+    generation_config = genai.types.GenerationConfig(
+        candidate_count=1,
+        max_output_tokens=1024,
+        temperature=0.5, # Lower temperature for more deterministic procedural advice
+    )
+
+    for model_name in models_to_try:
+        try:
+            model = genai.GenerativeModel(model_name)
+            response = model.generate_content(full_prompt, generation_config=generation_config)
+            return response.text
+        except Exception:
+            continue
+
+    return "I apologize, but I cannot access the judicial network at the moment. Please consult the Case Tracker directly."

@@ -1,0 +1,82 @@
+{% extends "dashboard_base.html" %}
+
+{% block content %}
+<div class="space-y-8">
+    <div class="flex justify-between items-center">
+        <div>
+            <h1 class="text-3xl font-bold text-white mb-2" data-i18n="vaad_suchak">VaadSuchak (Tracker)</h1>
+            <p class="text-slate-400" data-i18n="monitor_cases">Monitor your active legal cases.</p>
+        </div>
+        <a href="/judicial/intake"
+            class="bg-amber-600 hover:bg-amber-500 text-white px-4 py-2 rounded-xl transition-colors"
+            data-i18n="new_case">
+            + New Case
+        </a>
+    </div>
+
+    <!-- Cases Grid -->
+    <div id="cases-container" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Loading State -->
+        <div class="col-span-full text-center py-20 text-slate-500" data-i18n="loading_cases">
+            Loading cases...
+        </div>
+    </div>
+</div>
+
+<script>
+    async function loadCases() {
+        try {
+            const res = await fetch('/cases');
+            const cases = await res.json();
+            const container = document.getElementById('cases-container');
+
+            if (cases.length === 0) {
+                container.innerHTML = `
+                    <div class="col-span-full text-center py-20 border border-dashed border-slate-800 rounded-3xl">
+                        <p class="text-slate-400 mb-4" data-i18n="no_cases_found">No cases found.</p>
+                        <a href="/judicial/intake" class="text-amber-400 hover:underline" data-i18n="file_your_first_case">File your first case</a>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = cases.map(c => `
+                <div class="bg-slate-900/50 border border-white/5 rounded-2xl p-6 hover:border-amber-500/30 transition-all">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                             <span class="px-2 py-1 rounded text-xs font-medium bg-slate-800 text-slate-400 border border-white/10 mb-2 inline-block">
+                                ${c.case_type}
+                            </span>
+                            <h3 class="text-xl font-bold text-white">${c.title}</h3>
+                        </div>
+                        <span class="px-3 py-1 rounded-full text-xs font-bold ${c.status === 'Open' ? 'bg-green-500/10 text-green-400' : 'bg-slate-700 text-slate-400'}">
+                            ${c.status}
+                        </span>
+                    </div>
+                    
+                    <div class="space-y-2 mb-6">
+                        <div class="flex justify-between text-sm text-slate-400">
+                            <span data-i18n="current_stage">Stage</span>
+                            <span class="text-white">${c.current_stage}</span>
+                        </div>
+                        <div class="flex justify-between text-sm text-slate-400">
+                            <span>Created</span>
+                            <span class="text-white">${new Date(c.created_at).toLocaleDateString()}</span>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-2">
+                        <button onclick="alert('View Details Coming Soon')" class="flex-1 bg-slate-800 hover:bg-slate-700 text-white py-2 rounded-lg text-sm transition-colors" data-i18n="view_details">
+                            View Details
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+
+        } catch (err) {
+            console.error(err);
+        }
+    }
+    loadCases();
+</script>
+{% endblock %}

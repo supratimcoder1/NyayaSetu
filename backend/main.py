@@ -178,7 +178,7 @@ async def chat_session_endpoint(request: schemas.ChatRequest, user: models.User 
         if msg.id != user_msg.id:
              history_context.append({"role": msg.role, "content": msg.content})
 
-    response_text = query_rag(request.message, history=history_context, language=user.preferred_language)
+    response_text = query_rag(request.message, history=history_context, language=user.preferred_language, user=user, db=db)
     
     # Save AI Message
     ai_msg = models.Message(session_id=session.id, role="ai", content=response_text)
@@ -258,6 +258,209 @@ async def bureaucracy_page(request: Request, user: models.User = Depends(auth.ge
     if not user:
         return RedirectResponse(url="/login")
     return templates.TemplateResponse("bureaucracy.html", {"request": request, "user": user})
+
+@app.get("/judicial-dashboard", response_class=HTMLResponse)
+async def judicial_dashboard_page(request: Request, user: models.User = Depends(auth.get_current_user_from_cookie)):
+    if not user:
+        return RedirectResponse(url="/login")
+    return templates.TemplateResponse("judicial_dashboard.html", {"request": request, "user": user})
+
+# --- New Judicial Routes ---
+
+@app.get("/judicial/intake", response_class=HTMLResponse)
+async def judicial_intake_page(request: Request, user: models.User = Depends(auth.get_current_user_from_cookie)):
+    if not user: return RedirectResponse(url="/login")
+    return templates.TemplateResponse("judicial_intake.html", {"request": request, "user": user})
+
+@app.get("/judicial/tracker", response_class=HTMLResponse)
+async def judicial_tracker_page(request: Request, user: models.User = Depends(auth.get_current_user_from_cookie)):
+    if not user: return RedirectResponse(url="/login")
+    return templates.TemplateResponse("judicial_tracker.html", {"request": request, "user": user})
+
+@app.get("/judicial/guidance", response_class=HTMLResponse)
+async def judicial_guidance_page(request: Request, session_id: int = None, user: models.User = Depends(auth.get_current_user_from_cookie), db: Session = Depends(database.get_db)):
+    if not user: return RedirectResponse(url="/login")
+    
+    # Fetch all judicial sessions
+    sessions = db.query(models.JudicialChatSession).filter(models.JudicialChatSession.user_id == user.id).order_by(models.JudicialChatSession.updated_at.desc()).all()
+    
+    current_session = None
+    messages = []
+    
+    if session_id:
+        current_session = db.query(models.JudicialChatSession).filter(models.JudicialChatSession.id == session_id, models.JudicialChatSession.user_id == user.id).first()
+        
+    if current_session:
+        messages = db.query(models.JudicialMessage).filter(models.JudicialMessage.session_id == current_session.id).order_by(models.JudicialMessage.timestamp.asc()).all()
+        
+    return templates.TemplateResponse("judicial_guidance.html", {
+        "request": request, 
+        "user": user, 
+        "sessions": sessions, 
+        "current_session": current_session,
+        "messages": messages
+    })
+
+@app.post("/judicial/chat_session", response_model=schemas.ChatResponse)
+async def judicial_chat_session_endpoint(request: schemas.ChatRequest, user: models.User = Depends(auth.get_current_user_from_cookie), db: Session = Depends(database.get_db)):
+    if not user:
+         raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    session = None
+    if request.session_id:
+        # Fetch existing session
+        session = db.query(models.JudicialChatSession).filter(models.JudicialChatSession.id == request.session_id, models.JudicialChatSession.user_id == user.id).first()
+        if not session:
+             raise HTTPException(status_code=404, detail="Session not found")
+    else:
+        # Create NEW session
+        session = models.JudicialChatSession(user_id=user.id, title="New Consultation")
+        db.add(session)
+        db.commit()
+    
+    # Save User Message
+    user_msg = models.JudicialMessage(session_id=session.id, role="user", content=request.message)
+    db.add(user_msg)
+    
+    # Update Title
+    if session.title in ["New Consultation", "New Judicial Chat"]:
+        session.title = request.message[:30] + "..." if len(request.message) > 30 else request.message
+        db.add(session)
+
+    # Generate Response
+    # Fetch History
+    previous_messages = db.query(models.JudicialMessage).filter(
+        models.JudicialMessage.session_id == session.id
+    ).order_by(models.JudicialMessage.timestamp.desc()).limit(11).all()
+    previous_messages.reverse()
+    
+    history_context = []
+    for msg in previous_messages:
+        if msg.id != user_msg.id:
+             history_context.append({"role": msg.role, "content": msg.content})
+
+    # Call Judicial RAG
+    # Note: rag_engine needs to be imported if not already available in scope, but it is imported at top of main.py
+    from .rag_engine import query_judicial_rag
+    response_text = query_judicial_rag(request.message, history=history_context, language=user.preferred_language, user=user, db=db)
+    
+    # Save AI Message
+    ai_msg = models.JudicialMessage(session_id=session.id, role="ai", content=response_text)
+    db.add(ai_msg)
+    
+    session.updated_at = datetime.utcnow()
+    db.commit()
+    
+    return schemas.ChatResponse(response=response_text, session_id=session.id)
+
+@app.delete("/judicial/chat_session/{session_id}")
+async def delete_judicial_chat_session(session_id: int, user: models.User = Depends(auth.get_current_user_from_cookie), db: Session = Depends(database.get_db)):
+    if not user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+        
+    session = db.query(models.JudicialChatSession).filter(models.JudicialChatSession.id == session_id, models.JudicialChatSession.user_id == user.id).first()
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+
+    # Optional: Prevent deleting last one? No, let them delete all if they want, or same logic as main chat.
+    # Main chat prevented last deletion. Let's replicate that for consistency.
+    count = db.query(models.JudicialChatSession).filter(models.JudicialChatSession.user_id == user.id).count()
+    if count <= 1:
+         return {"response": "Cannot delete the last remaining consultation. Please start a new one first."}
+
+    db.delete(session)
+    db.commit()
+    
+    return {"response": "Session deleted successfully"}
+
+# --- JUDICIAL API ENDPOINTS ---
+
+from . import judicial_engine
+from typing import List
+
+@app.post("/cases", response_model=schemas.CaseResponse)
+async def create_case(case: schemas.CaseCreate, user: models.User = Depends(auth.get_current_user_from_cookie), db: Session = Depends(database.get_db)):
+    if not user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    new_case = models.Case(
+        user_id=user.id,
+        title=case.title,
+        case_type=case.case_type,
+        status=case.status,
+        current_stage=case.current_stage
+    )
+    db.add(new_case)
+    db.commit()
+    db.refresh(new_case)
+    return new_case
+
+@app.get("/cases", response_model=List[schemas.CaseResponse])
+async def get_my_cases(user: models.User = Depends(auth.get_current_user_from_cookie), db: Session = Depends(database.get_db)):
+    if not user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    return db.query(models.Case).filter(models.Case.user_id == user.id).all()
+
+@app.get("/cases/{case_id}", response_model=schemas.CaseResponse)
+async def get_case_details(case_id: int, user: models.User = Depends(auth.get_current_user_from_cookie), db: Session = Depends(database.get_db)):
+    if not user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    case = db.query(models.Case).filter(models.Case.id == case_id, models.Case.user_id == user.id).first()
+    if not case:
+        raise HTTPException(status_code=404, detail="Case not found")
+    return case
+
+@app.get("/case-timeline")
+async def get_case_timeline(case_type: str, user: models.User = Depends(auth.get_current_user_from_cookie)):
+    if not user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    return {"timeline": judicial_engine.generate_timeline(case_type)}
+
+@app.get("/case-next-steps")
+async def get_case_next_steps(stage: str, case_type: str, user: models.User = Depends(auth.get_current_user_from_cookie)):
+    if not user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    recommendation = judicial_engine.recommend_next_step(stage, case_type)
+    return {"recommendation": recommendation}
+
+from . import form_builder
+
+class DraftRequest(schemas.BaseModel):
+    case_type: str
+    details: str
+    language: str = "en"
+
+@app.post("/generate-draft")
+async def generate_legal_draft(request: DraftRequest, user: models.User = Depends(auth.get_current_user_from_cookie)):
+    if not user:
+         raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    draft = form_builder.generate_draft(request.case_type, request.details, request.language)
+    return {"draft": draft}
+
+@app.post("/cases/{case_id}/documents", response_model=schemas.CaseDocument)
+async def save_case_document(case_id: int, doc: schemas.CaseDocumentCreate, user: models.User = Depends(auth.get_current_user_from_cookie), db: Session = Depends(database.get_db)):
+    if not user:
+         raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    # Verify case ownership
+    case = db.query(models.Case).filter(models.Case.id == case_id, models.Case.user_id == user.id).first()
+    if not case:
+         raise HTTPException(status_code=404, detail="Case not found")
+
+    new_doc = models.CaseDocument(
+        case_id=case_id,
+        title=doc.title,
+        content=doc.content,
+        doc_type=doc.doc_type
+    )
+    db.add(new_doc)
+    db.commit()
+    db.refresh(new_doc)
+    return new_doc
+
+# -----------------------------
 
 @app.get("/admin-dashboard", response_class=HTMLResponse)
 async def admin_page(request: Request, user: models.User = Depends(auth.get_current_user_from_cookie), db: Session = Depends(database.get_db)):
