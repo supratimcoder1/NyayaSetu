@@ -2,7 +2,7 @@
 
 **Bridging the Gap Between Citizens and Justice.**
 
-NyayaSetu is an AI-powered legal assistant and case management system designed to democratize access to justice in India. It combines advanced Generative AI with a robust judicial workflow engine to help citizens navigate the legal system, manage civil cases, and understand complex laws (BNS, BNSS, BSA). Built for the **IMPECTUS Hackathon**.
+NyayaSetu is an AI-powered legal assistant and case management system designed to democratize access to justice in India. It combines advanced Generative AI with a robust judicial workflow engine to help citizens navigate the legal system, manage civil cases, and understand complex laws (BNS, BNSS, BSA).
 
 ![NyayaSetu Banner](static/nyayasetu_banner.png)
 
@@ -28,11 +28,7 @@ A full-featured platform for managing civil litigation lifecycles.
 *   **"Explain Like I'm 5"**: Upload complex legal notices or court orders (PDF/Images) and get a simple, actionable summary.
 *   **Vision AI**: Analysis of scanned documents using Gemini Vision.
 
-### 4. 📝 Forms & Bureaucracy Helper
-*   **Smart Drafting**: Generate legal drafts (Affidavits, RTIs, Rental Agreements) instantly based on your inputs.
-*   **Form Guidance**: Step-by-step assistance for government applications.
-
-### 5. 🔐 Enterprise-Grade Security
+### 4. 🔐 Enterprise-Grade Security
 *   **Session Management**: Secure, sliding-window sessions.
 *   **Data Isolation**: Every user’s cases and chats are private.
 *   **Admin Dashboard**: Oversight of system usage and user metrics.
