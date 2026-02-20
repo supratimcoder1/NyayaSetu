@@ -92,11 +92,11 @@ def query_rag(query_text: str, history: list = None, language: str = "en", user=
         if user_cases:
             judicial_context = "\nUSER'S ACTIVE LEGAL CASES:\n"
             for case in user_cases:
-                judicial_context += f"- Case ID: {case.id} | Title: {case.title} | Type: {case.case_type} | Status: {case.status} | Stage: {case.current_stage}\n"
+                judicial_context += f"- Case ID: {case.id} | Title: {case.title} | Type: {case.case_type} | Status: {case.status} | Stage: {case.current_stage} | Description: {case.description or 'N/A'}\n"
                 
                 # Add timeline info if specific case asked
                 if str(case.id) in query_text or case.title.lower() in query_text.lower():
-                     timeline = judicial_engine.generate_timeline(case.case_type)
+                     timeline = judicial_engine.generate_timeline(case.events, case.current_stage)
                      next_step = judicial_engine.recommend_next_step(case.current_stage, case.case_type)
                      judicial_context += f"  - Recommended Next Step: {next_step}\n"
                      judicial_context += f"  - Standard Timeline: {[t['stage'] for t in timeline]}\n"
@@ -327,11 +327,11 @@ def query_judicial_rag(query_text: str, history: list = None, language: str = "e
         if user_cases:
             judicial_context = "\nUSER'S ACTIVE LEGAL CASES:\n"
             for case in user_cases:
-                judicial_context += f"- Case ID: {case.id} | Title: {case.title} | Type: {case.case_type} | Status: {case.status} | Stage: {case.current_stage}\n"
+                judicial_context += f"- Case ID: {case.id} | Title: {case.title} | Type: {case.case_type} | Status: {case.status} | Stage: {case.current_stage} | Description: {case.description or 'N/A'}\n"
                 
                 # Add timeline/next steps if relevant to query
                 if str(case.id) in query_text or case.title.lower() in query_text.lower() or "my case" in query_text.lower():
-                     timeline = judicial_engine.generate_timeline(case.case_type)
+                     timeline = judicial_engine.generate_timeline(case.events, case.current_stage)
                      next_step = judicial_engine.recommend_next_step(case.current_stage, case.case_type)
                      judicial_context += f"  - Recommended Next Step: {next_step}\n"
                      # judicial_context += f"  - Standard Timeline: {[t['stage'] for t in timeline]}\n" # Timeline might be too long, add only if asked
@@ -374,9 +374,11 @@ def query_judicial_rag(query_text: str, history: list = None, language: str = "e
     }
     target_lang = lang_map.get(language, "English")
 
-    system_prompt = """You are the Judicial Procedural Guide of NyayaSetu.
+    system_prompt = f"""You are the Judicial Procedural Guide of NyayaSetu.
 Your role is to assist users specifically with their court cases and procedural queries.
 You have access to their registered cases in the system.
+
+IMPORTANT: You MUST answer in **{target_lang}** language.
 
 GUIDELINES:
 1. IF the user asks about "my case" and cases exist in context, REFER specifically to those cases by ID/Title.
@@ -399,7 +401,7 @@ GENERAL LEGAL CONTEXT:
 USER QUERY:
 {query_text}
 
-IMPORTANT: Answer in **{target_lang}**.
+IMPORTANT: Provide the response strictly in **{target_lang}**.
 Formatted as Markdown.
 """
 

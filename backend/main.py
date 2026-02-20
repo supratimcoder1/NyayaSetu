@@ -18,6 +18,10 @@ app = FastAPI(title="NyayaSetu")
 async def sliding_session_middleware(request: Request, call_next):
     response = await call_next(request)
     
+    # Never interfere with the logout endpoint — it intentionally clears the cookie
+    if request.url.path == "/logout":
+        return response
+    
     # Check for access token
     token = request.cookies.get("access_token")
     if token:

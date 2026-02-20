@@ -76,10 +76,6 @@ async def delete_chat_session(session_id: int, user: models.User = Depends(auth.
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
         
-    count = db.query(models.ChatSession).filter(models.ChatSession.user_id == user.id).count()
-    if count <= 1:
-         return {"response": "Cannot delete the last remaining conversation. Please start a new one first."}
-
     db.delete(session)
     db.commit()
     return {"response": "Session deleted successfully"}
@@ -118,7 +114,15 @@ async def judicial_chat_session_endpoint(request: schemas.ChatRequest, user: mod
         if msg.id != user_msg.id:
              history_context.append({"role": msg.role, "content": msg.content})
 
-    response_text = query_judicial_rag(request.message, history=history_context, language=user.preferred_language, user=user, db=db)
+    # Commit the session and user message before calling the (potentially slow) AI
+    db.commit()
+
+    try:
+        response_text = query_judicial_rag(request.message, history=history_context, language=user.preferred_language, user=user, db=db)
+    except Exception as e:
+        import logging
+        logging.getLogger(__name__).error(f"Judicial RAG error: {e}", exc_info=True)
+        response_text = "I'm sorry, there was an internal error processing your request. Please try again."
     
     ai_msg = models.JudicialMessage(session_id=session.id, role="ai", content=response_text)
     db.add(ai_msg)
@@ -136,9 +140,10 @@ async def delete_judicial_chat_session(session_id: int, user: models.User = Depe
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
 
-    count = db.query(models.JudicialChatSession).filter(models.JudicialChatSession.user_id == user.id).count()
-    if count <= 1:
-         return {"response": "Cannot delete the last remaining consultation. Please start a new one first."}
+    # Allow deleting the last session (client will handle empty state)
+    # count = db.query(models.JudicialChatSession).filter(models.JudicialChatSession.user_id == user.id).count()
+    # if count <= 1:
+    #      return {"response": "Cannot delete the last remaining consultation. Please start a new one first."}
 
     db.delete(session)
     db.commit()

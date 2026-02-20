@@ -60,10 +60,12 @@
 
             if (response.ok) {
                 const data = await response.json();
-                // Store token in cookie for easy server-side access if needed, or localstorage
-                // Cookie is set by server (HttpOnly)
-                // Redirect to dashboard
-                window.location.href = '/dashboard';
+                // Server sets the HttpOnly cookie — redirect based on role
+                if (data.role === 'admin') {
+                    window.location.href = '/admin-dashboard';
+                } else {
+                    window.location.href = '/dashboard';
+                }
             } else {
                 const msgEl = document.getElementById('message');
                 msgEl.textContent = "Invalid credentials. Please try again.";
@@ -73,7 +75,6 @@
             console.error(error);
         }
     });
-</script>
 </script>
 <script src="/static/js/particles.js"></script>
 {% endblock %}

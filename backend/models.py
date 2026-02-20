@@ -36,6 +36,17 @@ class ChatSession(Base):
     owner = relationship("User", back_populates="chats")
     messages = relationship("Message", back_populates="session", cascade="all, delete-orphan")
 
+class UserSession(Base):
+    __tablename__ = "user_sessions"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"))
+    login_time = Column(DateTime, default=datetime.utcnow)
+    ip_address = Column(String, nullable=True)
+    user_agent = Column(String, nullable=True)
+
+    user = relationship("User")
+
 class Message(Base):
     __tablename__ = "messages"
 

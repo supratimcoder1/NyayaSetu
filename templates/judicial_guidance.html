@@ -30,9 +30,8 @@
                     <p class="text-xs text-slate-600 mt-1">{{ session.updated_at.strftime('%b %d') }}</p>
                 </a>
 
-                {% if sessions|length > 1 %}
                 <button data-session-id="{{ session.id }}"
-                    class="delete-session-btn absolute right-2 top-1/2 -translate-y-1/2 p-2 text-slate-600 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
+                    class="delete-session-btn absolute right-2 top-1/2 -translate-y-1/2 p-2 text-slate-500 hover:text-red-400 hover:bg-white/10 rounded-lg transition-all z-10"
                     title="Delete Consultation">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 pointer-events-none" fill="none"
                         viewBox="0 0 24 24" stroke="currentColor">
@@ -40,7 +39,6 @@
                             d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                     </svg>
                 </button>
-                {% endif %}
             </div>
             {% endfor %}
             {% else %}
@@ -144,14 +142,21 @@
                             data-i18n-placeholder="ask_placeholder" required autocomplete="off">
 
                         <!-- Voice Button (Inside Input) -->
-                        <button type="button" id="voice-btn"
-                            class="absolute right-2 p-2 text-slate-400 hover:text-amber-400 transition-colors rounded-lg hover:bg-white/5">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
-                                stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
-                            </svg>
-                        </button>
+                        <div class="absolute right-2 flex items-center gap-2">
+                            <span id="listening-indicator" class="hidden flex h-3 w-3 relative">
+                                <span
+                                    class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                <span class="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+                            </span>
+                            <button type="button" id="voice-btn"
+                                class="p-2 text-slate-400 hover:text-amber-400 transition-colors rounded-lg hover:bg-white/5 z-10 relative">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                                    stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                                </svg>
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -220,6 +225,49 @@
         }
     }
 
+    // --- Voice Input Logic ---
+    const listeningIndicator = document.getElementById('listening-indicator');
+
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        const recognition = new SpeechRecognition();
+
+        recognition.continuous = false;
+        recognition.interimResults = false;
+
+        recognition.onstart = () => {
+            voiceBtn.classList.add('text-red-400');
+            listeningIndicator.classList.remove('hidden');
+            userInput.placeholder = "Listening...";
+        };
+
+        recognition.onend = () => {
+            voiceBtn.classList.remove('text-red-400');
+            listeningIndicator.classList.add('hidden');
+            userInput.placeholder = "Ask about your case or legal procedures...";
+        };
+
+        recognition.onresult = (event) => {
+            const transcript = event.results[0][0].transcript;
+            userInput.value = transcript;
+            // Focus input but don't auto-submit to let user review
+            userInput.focus();
+        };
+
+        voiceBtn.addEventListener('click', () => {
+            if (listeningIndicator.classList.contains('hidden')) {
+                // Update language before starting
+                const currentLang = window.currentLang || document.documentElement.lang || 'en';
+                recognition.lang = currentLang === 'hi' ? 'hi-IN' : (currentLang === 'bn' ? 'bn-IN' : (currentLang === 'te' ? 'te-IN' : 'en-US'));
+                recognition.start();
+            } else {
+                recognition.stop();
+            }
+        });
+    } else {
+        voiceBtn.style.display = 'none'; // Hide if not supported
+    }
+
     // --- Chat Logic ---
     chatForm.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -280,8 +328,22 @@
                 signal: abortController.signal
             });
 
-            const data = await response.json();
+            const data = await response.json().catch(() => ({ response: "Server returned an unexpected response. Please try again." }));
             document.getElementById(loadingId)?.remove();
+
+            if (!response.ok) {
+                const errMsg = data.detail || data.response || "An error occurred. Please try again.";
+                const errorHtml = `
+                    <div class="flex justify-start animate-fade-in-up">
+                        <div class="bg-red-500/10 border border-red-500/50 text-red-300 rounded-lg px-4 py-2 text-sm">
+                            ⚠️ ${errMsg}
+                        </div>
+                    </div>
+                `;
+                chatHistory.insertAdjacentHTML('beforeend', errorHtml);
+                scrollToBottom();
+                return;
+            }
 
             const parsedResponse = marked.parse(data.response);
             const botHtml = `

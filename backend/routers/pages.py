@@ -137,11 +137,11 @@ async def admin_page(request: Request, user: models.User = Depends(auth.get_curr
         return RedirectResponse(url="/dashboard")
 
     all_users = db.query(models.User).order_by(models.User.id.desc()).all()
-    total_chats = db.query(models.ChatSession).count()
+    total_sessions = db.query(models.UserSession).count()
 
     return templates.TemplateResponse("admin_dashboard.html", {
         "request": request, 
         "user": user, 
         "users": all_users,
-        "total_chats": total_chats
+        "total_sessions": total_sessions
     })
