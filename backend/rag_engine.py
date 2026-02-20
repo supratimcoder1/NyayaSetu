@@ -76,32 +76,7 @@ def query_rag(query_text: str, history: list = None, language: str = "en", user=
     if not settings.GEMINI_API_KEY:
         return "Error: GEMINI_API_KEY not found in .env settings."
 
-    # --- INTENT DETECTION (Phase 4) ---
-    judicial_context = ""
-    is_judicial_query = False
-    
-    # Simple keyword-based intent detection
-    judicial_keywords = ["my case", "case status", "hearing", "file a case", "my lawsuit", "court date", "next step"]
-    if any(k in query_text.lower() for k in judicial_keywords):
-        is_judicial_query = True
-        
-    if is_judicial_query and user and db:
-        # Fetch User's Cases
-        user_cases = db.query(models.Case).filter(models.Case.user_id == user.id).all()
-        
-        if user_cases:
-            judicial_context = "\nUSER'S ACTIVE LEGAL CASES:\n"
-            for case in user_cases:
-                judicial_context += f"- Case ID: {case.id} | Title: {case.title} | Type: {case.case_type} | Status: {case.status} | Stage: {case.current_stage} | Description: {case.description or 'N/A'}\n"
-                
-                # Add timeline info if specific case asked
-                if str(case.id) in query_text or case.title.lower() in query_text.lower():
-                     timeline = judicial_engine.generate_timeline(case.events, case.current_stage)
-                     next_step = judicial_engine.recommend_next_step(case.current_stage, case.case_type)
-                     judicial_context += f"  - Recommended Next Step: {next_step}\n"
-                     judicial_context += f"  - Standard Timeline: {[t['stage'] for t in timeline]}\n"
-        else:
-            judicial_context = "\nUSER'S CASES: No active cases found for this user.\n"
+
 
     # 1. Embed the query (Standard RAG)
     # Even for judicial queries, we might need legal context (e.g. "What implies Section 420 for my case?")
@@ -158,18 +133,14 @@ def query_rag(query_text: str, history: list = None, language: str = "en", user=
 CONTEXT FROM LEGAL DOCUMENTS (Primary Source):
 {context_text}
 
-JUDICIAL CASE CONTEXT (User's Personal Data):
-{judicial_context}
-
 {history_text}
 USER QUERY:
 {query_text}
 
 IMPORTANT INSTRUCTION:
 Answer the above query in **{target_lang}** language.
-If the user asks about "my case", use the JUDICIAL CASE CONTEXT.
-If the user asks about laws, use the CONTEXT FROM LEGAL DOCUMENTS.
-Always cite your sources (e.g., "According to BNS Section X..." or "Based on your case file...").
+Only answer questions related to Indian law, constitution, and legal procedures.
+Always cite your sources (e.g., "According to BNS Section X...").
 
 ANSWER:
 """
