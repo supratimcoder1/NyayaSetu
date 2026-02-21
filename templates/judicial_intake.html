@@ -4,48 +4,147 @@
 <div class="max-w-4xl mx-auto space-y-8">
     <!-- Header -->
     <div
-        class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-slate-900 to-slate-800 border border-white/10 p-8">
-        <h1 class="text-3xl font-bold text-white mb-2" data-i18n="vaad_dakhil">VaadDakhil (Intake)</h1>
-        <p class="text-slate-400" data-i18n="file_new_case">File a new case into the system.</p>
+        class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-slate-900 to-slate-800 border border-amber-500/20 p-8">
+        <div
+            class="absolute top-0 right-0 -mt-16 -mr-16 w-64 h-64 bg-amber-500/10 rounded-full blur-3xl pointer-events-none">
+        </div>
+        <h1 class="text-3xl font-bold text-white mb-2" data-i18n="vaad_dakhil">VaadDakhil (Case Intake)</h1>
+        <p class="text-slate-400" data-i18n="file_new_case">Register a new legal case into the system with full party
+            details.</p>
     </div>
 
     <!-- Intake Form -->
     <div class="glass p-8 rounded-3xl border border-white/10">
-        <form id="intake-form" class="space-y-6">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                    <label class="block text-sm font-medium text-slate-400 mb-2" data-i18n="case_title">Case
-                        Title</label>
-                    <input type="text" name="title" required
-                        class="w-full bg-slate-900/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-amber-500 transition-all"
-                        placeholder="e.g. Property Dispute vs. State">
+        <form id="intake-form" class="space-y-8">
+
+            <!-- Section 1: Case Information -->
+            <div>
+                <h3 class="text-sm font-bold text-amber-400 uppercase tracking-wider mb-4 flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    Case Information
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-400 mb-2">Case Title <span
+                                class="text-red-400">*</span></label>
+                        <input type="text" name="title" required
+                            class="w-full bg-slate-900/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-amber-500 transition-all"
+                            placeholder="e.g. Property Dispute - Ram vs. Shyam">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-400 mb-2">Case Type <span
+                                class="text-red-400">*</span></label>
+                        <select name="case_type" required
+                            class="w-full bg-slate-900/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-amber-500 transition-all">
+                            <option value="Civil">Civil</option>
+                            <option value="Family">Family</option>
+                            <option value="Corporate">Corporate</option>
+                        </select>
+                    </div>
                 </div>
-                <div>
-                    <label class="block text-sm font-medium text-slate-400 mb-2" data-i18n="case_type">Case Type</label>
-                    <select name="case_type" required
-                        class="w-full bg-slate-900/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-amber-500 transition-all">
-                        <option value="Civil">Civil</option>
-                        <!-- <option value="Criminal">Criminal</option> -->
-                        <option value="Family">Family</option>
-                        <option value="Corporate">Corporate</option>
-                    </select>
+                <div class="mt-4">
+                    <label class="block text-sm font-medium text-slate-400 mb-2">Case Description <span
+                            class="text-red-400">*</span></label>
+                    <textarea name="description" rows="4" required
+                        class="w-full bg-slate-900/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-amber-500 transition-all"
+                        placeholder="Provide a detailed description of the case, including key facts, background, and the relief sought..."></textarea>
                 </div>
             </div>
 
+            <hr class="border-white/5">
+
+            <!-- Section 2: Party Details -->
             <div>
-                <label class="block text-sm font-medium text-slate-400 mb-2">Case Description (Optional)</label>
-                <textarea name="description" rows="4"
-                    class="w-full bg-slate-900/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-amber-500 transition-all"
-                    placeholder="Provide brief details about the case..."></textarea>
+                <h3 class="text-sm font-bold text-indigo-400 uppercase tracking-wider mb-4 flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
+                    Party Details
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Plaintiff Column -->
+                    <div class="space-y-4 p-4 rounded-xl bg-emerald-500/5 border border-emerald-500/10">
+                        <p class="text-xs font-bold text-emerald-400 uppercase tracking-wider">Plaintiff (Petitioner)
+                        </p>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-400 mb-2">Plaintiff Name <span
+                                    class="text-red-400">*</span></label>
+                            <input type="text" name="plaintiff_name" required
+                                class="w-full bg-slate-900/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all"
+                                placeholder="Full legal name">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-400 mb-2">Plaintiff's Lawyer</label>
+                            <input type="text" name="plaintiff_lawyer"
+                                class="w-full bg-slate-900/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all"
+                                placeholder="Leave blank for Public Prosecutor">
+                        </div>
+                    </div>
+                    <!-- Defendant Column -->
+                    <div class="space-y-4 p-4 rounded-xl bg-rose-500/5 border border-rose-500/10">
+                        <p class="text-xs font-bold text-rose-400 uppercase tracking-wider">Defendant (Respondent)</p>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-400 mb-2">Defendant Name <span
+                                    class="text-red-400">*</span></label>
+                            <input type="text" name="defendant_name" required
+                                class="w-full bg-slate-900/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-rose-500 transition-all"
+                                placeholder="Full legal name">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-400 mb-2">Defendant's Lawyer</label>
+                            <input type="text" name="defendant_lawyer"
+                                class="w-full bg-slate-900/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-rose-500 transition-all"
+                                placeholder="Leave blank for Public Prosecutor">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <hr class="border-white/5">
+
+            <!-- Section 3: Your Role -->
+            <div>
+                <h3 class="text-sm font-bold text-purple-400 uppercase tracking-wider mb-4 flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                    Your Role in This Case
+                </h3>
+                <p class="text-xs text-slate-500 mb-4">This helps the AI provide advice specific to your position.</p>
+                <div class="flex gap-4">
+                    <label class="flex-1 cursor-pointer">
+                        <input type="radio" name="user_role" value="Plaintiff" checked class="peer hidden">
+                        <div
+                            class="peer-checked:border-emerald-500 peer-checked:bg-emerald-500/10 peer-checked:text-emerald-400 border border-white/10 rounded-xl p-4 text-center text-slate-400 transition-all hover:border-white/30">
+                            <p class="font-bold text-lg">Plaintiff</p>
+                            <p class="text-xs mt-1 opacity-70">I am filing the case</p>
+                        </div>
+                    </label>
+                    <label class="flex-1 cursor-pointer">
+                        <input type="radio" name="user_role" value="Defendant" class="peer hidden">
+                        <div
+                            class="peer-checked:border-rose-500 peer-checked:bg-rose-500/10 peer-checked:text-rose-400 border border-white/10 rounded-xl p-4 text-center text-slate-400 transition-all hover:border-white/30">
+                            <p class="font-bold text-lg">Defendant</p>
+                            <p class="text-xs mt-1 opacity-70">I am defending</p>
+                        </div>
+                    </label>
+                </div>
             </div>
 
             <!-- Hidden Default Stage -->
             <input type="hidden" name="current_stage" value="Pre-Filing">
 
             <button type="submit"
-                class="w-full bg-gradient-to-r from-amber-600 to-yellow-600 hover:from-amber-500 hover:to-yellow-500 text-white font-bold py-3 px-4 rounded-xl shadow-lg transition-all transform hover:scale-[1.02]"
-                data-i18n="create_case">
-                Create Case
+                class="w-full bg-gradient-to-r from-amber-600 to-yellow-600 hover:from-amber-500 hover:to-yellow-500 text-white font-bold py-4 px-4 rounded-xl shadow-lg shadow-amber-500/20 transition-all transform hover:scale-[1.02] text-lg">
+                ⚖️ Register Case
             </button>
             <div id="msg" class="text-center text-sm font-medium hidden mt-4"></div>
         </form>
@@ -56,11 +155,15 @@
     document.getElementById('intake-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         const formData = new FormData(e.target);
-        // Convert to JSON object
         const data = {
             title: formData.get('title'),
             description: formData.get('description'),
             case_type: formData.get('case_type'),
+            plaintiff_name: formData.get('plaintiff_name'),
+            defendant_name: formData.get('defendant_name'),
+            plaintiff_lawyer: formData.get('plaintiff_lawyer') || 'Public Prosecutor',
+            defendant_lawyer: formData.get('defendant_lawyer') || 'Public Prosecutor',
+            user_role: formData.get('user_role'),
             current_stage: "Pre-Filing",
             status: "Open"
         };
@@ -74,15 +177,17 @@
                 body: JSON.stringify(data)
             });
             if (res.ok) {
-                msg.textContent = "Case created successfully!";
+                const result = await res.json();
+                msg.textContent = "✅ Case registered successfully! Redirecting to tracker...";
                 msg.className = "text-center text-sm font-medium text-green-400 mt-4 block";
                 e.target.reset();
-                setTimeout(() => window.location.href = '/judicial/tracker', 1500);
+                setTimeout(() => window.location.href = `/cases/${result.id}`, 1500);
             } else {
-                throw new Error('Failed');
+                const err = await res.json();
+                throw new Error(err.detail || 'Failed');
             }
         } catch (err) {
-            msg.textContent = "Error creating case.";
+            msg.textContent = "❌ " + err.message;
             msg.className = "text-center text-sm font-medium text-red-400 mt-4 block";
         }
     });

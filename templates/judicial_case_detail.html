@@ -1,296 +1,754 @@
 {% extends "dashboard_base.html" %}
 
 {% block content %}
+<meta name="case-id" content="{{ case.id }}">
 <div class="space-y-6">
-    <!-- Header -->
-    <div class="flex justify-between items-start">
+    <!-- Header with Case Title and Status -->
+    <div class="flex flex-col md:flex-row justify-between items-start gap-4">
         <div class="animate-fade-in-up">
-            <h1 class="text-3xl font-bold text-white mb-2">{{ case.title }}</h1>
-            <div class="flex items-center gap-3">
+            <div class="flex items-center gap-3 mb-2">
+                <h1 class="text-3xl font-bold text-white">{{ case.title }}</h1>
                 <span
-                    class="px-3 py-1 rounded-full text-xs font-bold bg-slate-700 text-slate-300 border border-white/10 uppercase tracking-wider">
-                    {{ case.case_type }}
-                </span>
-                <span class="px-3 py-1 rounded-full text-xs font-bold 
-                    {% if case.status == 'Open' %}bg-emerald-500/20 text-emerald-400 border border-emerald-500/20
-                    {% elif case.status == 'Closed' %}bg-slate-500/20 text-slate-400 border border-slate-500/20
-                    {% else %}bg-amber-500/20 text-amber-400 border border-amber-500/20{% endif %}">
+                    class="px-3 py-1 rounded-full text-xs font-bold
+                    {{ 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/20' if case.status == 'Open' else 'bg-slate-500/20 text-slate-400 border border-slate-500/20' }}">
                     {{ case.status }}
                 </span>
             </div>
+            <div class="flex items-center gap-4 text-sm text-slate-500">
+                <span>Case #{{ case.id }}</span>
+                <span>•</span>
+                <span>{{ case.case_type }}</span>
+                <span>•</span>
+                <span>Filed {{ case.created_at.strftime('%b %d, %Y') }}</span>
+                <span>•</span>
+                <span class="text-amber-400 font-medium">Stage: {{ case.current_stage }}</span>
+                {% if case.cnr_number %}
+                <span>•</span>
+                <span class="text-cyan-400 font-mono font-bold">CNR: {{ case.cnr_number }}</span>
+                {% endif %}
+            </div>
         </div>
-
         <div class="flex gap-2">
-            <button onclick="deleteCase()"
-                class="bg-red-500/10 hover:bg-red-500/20 text-red-400 px-4 py-2 rounded-xl border border-red-500/20 transition-all font-medium">
-                Delete Case
-            </button>
-            <button onclick="openEventModal()"
-                class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-xl transition-all shadow-lg shadow-indigo-500/20 font-medium">
-                + Add Event
+            <a href="/judicial/tracker"
+                class="text-slate-400 hover:text-white px-4 py-2 rounded-xl border border-white/10 hover:bg-white/5 transition-all text-sm">
+                ← Back to Tracker
+            </a>
+            <button id="delete-case-btn"
+                class="text-red-400 hover:text-white hover:bg-red-600 px-4 py-2 rounded-xl border border-red-500/30 transition-all text-sm">
+                🗑️ Delete Case
             </button>
         </div>
     </div>
 
-    <!-- Main Grid -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
-        <!-- Left Col: Timeline & Status (2/3) -->
-        <div class="lg:col-span-2 space-y-6">
-
-            <!-- Current Stage Card -->
-            <div class="glass p-6 rounded-2xl border border-white/10 relative overflow-hidden animate-fade-in-up"
-                style="animation-delay: 0.1s">
-                <div
-                    class="absolute -top-20 -right-20 w-60 h-60 bg-indigo-500/20 rounded-full blur-3xl pointer-events-none">
+    <!-- Party Info Banner -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 animate-fade-in-up" style="animation-delay: 0.1s">
+        <!-- Plaintiff -->
+        <div class="glass p-5 rounded-2xl border border-emerald-500/20 bg-emerald-500/5">
+            <div class="flex items-center gap-3 mb-3">
+                <div class="w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center">
+                    <span class="text-emerald-400 text-sm font-bold">P</span>
                 </div>
+                <div>
+                    <p class="text-xs text-emerald-400 font-bold uppercase tracking-wider">Plaintiff (Petitioner)</p>
+                    <p class="text-white font-medium">{{ case.plaintiff_name }}</p>
+                </div>
+            </div>
+            <p class="text-xs text-slate-500">Advocate: <span class="text-slate-300">{{ case.plaintiff_lawyer }}</span>
+            </p>
+        </div>
+        <!-- Defendant -->
+        <div class="glass p-5 rounded-2xl border border-rose-500/20 bg-rose-500/5">
+            <div class="flex items-center gap-3 mb-3">
+                <div class="w-8 h-8 rounded-full bg-rose-500/20 flex items-center justify-center">
+                    <span class="text-rose-400 text-sm font-bold">D</span>
+                </div>
+                <div>
+                    <p class="text-xs text-rose-400 font-bold uppercase tracking-wider">Defendant (Respondent)</p>
+                    <p class="text-white font-medium">{{ case.defendant_name }}</p>
+                </div>
+            </div>
+            <p class="text-xs text-slate-500">Advocate: <span class="text-slate-300">{{ case.defendant_lawyer }}</span>
+            </p>
+        </div>
+    </div>
 
-                <h3 class="text-sm font-bold text-indigo-400 uppercase tracking-wider mb-4">Current Stage</h3>
-                <div class="flex items-center gap-4 mb-6">
-                    <div
-                        class="w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white shadow-lg">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24"
+    <!-- Your Role Badge -->
+    <div class="flex items-center gap-2 text-sm">
+        <span class="text-slate-500">Your Role:</span>
+        <span
+            class="px-3 py-1 rounded-full text-xs font-bold
+            {{ 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/20' if case.user_role == 'Plaintiff' else 'bg-rose-500/20 text-rose-400 border border-rose-500/20' }}">
+            {{ case.user_role }}
+        </span>
+    </div>
+
+    <!-- CNR Section -->
+    {% if case.cnr_number %}
+    <div class="glass p-4 rounded-2xl border border-cyan-500/20 bg-cyan-500/5 flex items-center justify-between animate-fade-in-up"
+        style="animation-delay: 0.15s">
+        <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-full bg-cyan-500/20 flex items-center justify-center">
+                <span class="text-cyan-400 text-sm">✅</span>
+            </div>
+            <div>
+                <p class="text-xs text-cyan-400 font-bold uppercase tracking-wider">Court CNR (Verified)</p>
+                <p class="text-white font-mono font-bold text-lg tracking-widest">{{ case.cnr_number }}</p>
+            </div>
+        </div>
+        <span
+            class="px-3 py-1 rounded-full text-xs font-bold bg-cyan-500/20 text-cyan-400 border border-cyan-500/20">Officially
+            Filed</span>
+    </div>
+    {% else %}
+    <div id="cnr-banner" class="glass p-5 rounded-2xl border border-amber-500/30 bg-amber-500/5 animate-fade-in-up"
+        style="animation-delay: 0.15s">
+        <div class="flex items-start gap-3 mb-4">
+            <div class="w-8 h-8 rounded-full bg-amber-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                <span class="text-amber-400 text-sm">⚠️</span>
+            </div>
+            <div>
+                <p class="text-amber-400 font-bold text-sm">CNR Registration Required</p>
+                <p class="text-slate-400 text-xs mt-1">Enter the 16-character Case Number Record (CNR) assigned by the
+                    court after filing. You cannot add evidence, hearings, or judgments until the CNR is registered.</p>
+            </div>
+        </div>
+        <div class="flex flex-col sm:flex-row gap-3">
+            <div class="flex-1 relative">
+                <input id="cnr-input" type="text" maxlength="16" placeholder="e.g. DLND010012342024"
+                    class="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white font-mono tracking-widest text-center uppercase
+                    focus:border-amber-500/50 focus:ring-1 focus:ring-amber-500/20 outline-none transition-all placeholder:text-slate-600 placeholder:tracking-normal" oninput="validateCNRLive(this)">
+                <p id="cnr-hint" class="text-xs text-slate-600 mt-1.5 text-center">Format: 4 letters (state+district) +
+                    2 digits (court) + 6 digits (serial) + 4 digits (year)</p>
+                <p id="cnr-error" class="text-xs text-red-400 mt-1 text-center hidden"></p>
+            </div>
+            <button id="cnr-submit-btn" onclick="submitCNR()" disabled class="px-6 py-2.5 bg-amber-600/80 text-white rounded-xl font-semibold text-sm
+                disabled:opacity-40 disabled:cursor-not-allowed hover:bg-amber-500 transition-all whitespace-nowrap">
+                Register CNR
+            </button>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Tabs -->
+    <div class="border-b border-white/10">
+        <nav class="flex gap-1" id="case-tabs">
+            <button onclick="switchTab('overview')" data-tab="overview"
+                class="tab-btn active px-5 py-3 text-sm font-medium rounded-t-xl border border-transparent transition-all">
+                Overview
+            </button>
+            <button onclick="switchTab('evidence')" data-tab="evidence"
+                class="tab-btn px-5 py-3 text-sm font-medium rounded-t-xl border border-transparent transition-all">
+                Evidence ({{ case.documents|length }})
+            </button>
+            <button onclick="switchTab('hearings')" data-tab="hearings"
+                class="tab-btn px-5 py-3 text-sm font-medium rounded-t-xl border border-transparent transition-all">
+                Hearings ({{ case.hearings|length }})
+            </button>
+            <button onclick="switchTab('judgment')" data-tab="judgment"
+                class="tab-btn px-5 py-3 text-sm font-medium rounded-t-xl border border-transparent transition-all">
+                Judgment
+            </button>
+        </nav>
+    </div>
+
+    <!-- Tab Content -->
+
+    <!-- OVERVIEW TAB -->
+    <div id="tab-overview" class="tab-content space-y-6">
+        <!-- Description -->
+        <div class="glass p-6 rounded-2xl border border-white/10">
+            <h3 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3">Case Description</h3>
+            <p class="text-slate-300 leading-relaxed whitespace-pre-wrap">{{ case.description }}</p>
+        </div>
+
+        <!-- Key Details Grid -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div class="glass p-4 rounded-2xl border border-white/10 text-center">
+                <p class="text-xs text-slate-500 mb-1">Case ID</p>
+                <p class="text-white font-bold text-lg">#{{ case.id }}</p>
+            </div>
+            <div class="glass p-4 rounded-2xl border border-white/10 text-center">
+                <p class="text-xs text-slate-500 mb-1">Date Registered</p>
+                <p class="text-white font-medium">{{ case.created_at.strftime('%d %b %Y') }}</p>
+            </div>
+            <div class="glass p-4 rounded-2xl border border-white/10 text-center">
+                <p class="text-xs text-slate-500 mb-1">Total Hearings</p>
+                <p class="text-white font-bold text-lg">{{ case.hearings|length }}</p>
+            </div>
+            <div class="glass p-4 rounded-2xl border border-white/10 text-center">
+                <p class="text-xs text-slate-500 mb-1">Duration</p>
+                <p class="text-white font-medium" id="case-duration">—</p>
+            </div>
+        </div>
+
+        <!-- Stage Timeline -->
+        <div class="glass p-6 rounded-2xl border border-white/10">
+            <h3 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-6">Case Workflow</h3>
+            <div id="timeline-container" class="space-y-0 relative border-l-2 border-slate-700 ml-3">
+                <!-- Populated by JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- EVIDENCE TAB -->
+    <div id="tab-evidence" class="tab-content hidden space-y-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Plaintiff Evidence -->
+            <div class="space-y-4">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-sm font-bold text-emerald-400 uppercase tracking-wider">Plaintiff's Evidence</h3>
+                    <button onclick="openDocModal('Plaintiff')"
+                        class="text-emerald-400 hover:text-emerald-300 text-xs font-medium px-3 py-1 border border-emerald-500/20 rounded-lg hover:bg-emerald-500/10 transition-all">
+                        + Add
+                    </button>
+                </div>
+                <div class="space-y-3" id="plaintiff-docs">
+                    {% for doc in case.documents if doc.party == 'Plaintiff' %}
+                    <div class="glass p-4 rounded-xl border border-emerald-500/10 group relative">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-white font-medium text-sm">{{ doc.title }}</p>
+                                <p class="text-xs text-slate-500 mt-1">{{ doc.doc_type }} • {{
+                                    doc.uploaded_at.strftime('%b %d') }}</p>
+                            </div>
+                            <button class="delete-doc-btn text-slate-600 hover:text-red-400 p-1 transition-colors"
+                                data-case-id="{{ case.id }}" data-doc-id="{{ doc.id }}" title="Delete">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
+                                    stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                            </button>
+                        </div>
+                        {% if doc.content %}
+                        <p class="text-slate-400 text-xs mt-2 line-clamp-3">{{ doc.content }}</p>
+                        {% endif %}
+                    </div>
+                    {% else %}
+                    <p class="text-slate-600 text-sm text-center py-6 border border-dashed border-slate-800 rounded-xl">
+                        No evidence submitted yet.</p>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Defendant Evidence -->
+            <div class="space-y-4">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-sm font-bold text-rose-400 uppercase tracking-wider">Defendant's Evidence</h3>
+                    <button onclick="openDocModal('Defendant')"
+                        class="text-rose-400 hover:text-rose-300 text-xs font-medium px-3 py-1 border border-rose-500/20 rounded-lg hover:bg-rose-500/10 transition-all">
+                        + Add
+                    </button>
+                </div>
+                <div class="space-y-3" id="defendant-docs">
+                    {% for doc in case.documents if doc.party == 'Defendant' %}
+                    <div class="glass p-4 rounded-xl border border-rose-500/10 group relative">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-white font-medium text-sm">{{ doc.title }}</p>
+                                <p class="text-xs text-slate-500 mt-1">{{ doc.doc_type }} • {{
+                                    doc.uploaded_at.strftime('%b %d') }}</p>
+                            </div>
+                            <button class="delete-doc-btn" data-case-id="{{ case.id }}" data-doc-id="{{ doc.id }}"
+                                class="text-slate-600 hover:text-red-400 p-1 transition-colors" title="Delete">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
+                                    stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                            </button>
+                        </div>
+                        {% if doc.content %}
+                        <p class="text-slate-400 text-xs mt-2 line-clamp-3">{{ doc.content }}</p>
+                        {% endif %}
+                    </div>
+                    {% else %}
+                    <p class="text-slate-600 text-sm text-center py-6 border border-dashed border-slate-800 rounded-xl">
+                        No evidence submitted yet.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- HEARINGS TAB -->
+    <div id="tab-hearings" class="tab-content hidden space-y-6">
+        <div class="flex justify-between items-center">
+            <h3 class="text-sm font-bold text-slate-400 uppercase tracking-wider">Hearing History</h3>
+            <button onclick="openHearingModal()"
+                class="bg-indigo-600 hover:bg-indigo-500 text-white text-sm px-4 py-2 rounded-xl transition-all shadow-lg shadow-indigo-500/20">
+                + Record Hearing
+            </button>
+        </div>
+
+        <div class="space-y-4">
+            {% for hearing in case.hearings|reverse %}
+            <div class="glass p-5 rounded-2xl border border-white/10 relative">
+                <div class="flex justify-between items-start mb-3">
+                    <div>
+                        <p class="text-white font-medium">{{ hearing.date.strftime('%d %B %Y') }}</p>
+                        {% if hearing.court_name %}
+                        <p class="text-xs text-slate-500">{{ hearing.court_name }}{% if hearing.judge_name %} • Hon. {{
+                            hearing.judge_name }}{% endif %}</p>
+                        {% endif %}
+                    </div>
+                    <button class="delete-hearing-btn text-slate-600 hover:text-red-400 p-1 transition-colors"
+                        data-case-id="{{ case.id }}" data-hearing-id="{{ hearing.id }}" title="Delete">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
                             stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                         </svg>
-                    </div>
-                    <div>
-                        <h2 class="text-2xl font-bold text-white">{{ case.current_stage }}</h2>
-                        <p class="text-slate-400 text-sm mt-1">Based on recent events</p>
-                    </div>
+                    </button>
                 </div>
-
-                <!-- Next Step Recommendation -->
-                <div class="bg-slate-800/50 rounded-xl p-4 border border-white/5">
-                    <div class="flex items-start gap-3">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-amber-400 mt-0.5" fill="none"
-                            viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        <div>
-                            <h4 class="text-white font-medium mb-1">Recommended Next Step</h4>
-                            <p id="next-step-text" class="text-slate-300 text-sm leading-relaxed">Loading guidance...
-                            </p>
-                        </div>
-                    </div>
+                {% if hearing.observation %}
+                <div class="bg-slate-800/50 rounded-xl p-3 mb-3">
+                    <p class="text-xs text-slate-500 mb-1 font-semibold">Observation:</p>
+                    <p class="text-slate-300 text-sm">{{ hearing.observation }}</p>
                 </div>
+                {% endif %}
+                {% if hearing.next_hearing_date %}
+                <p class="text-xs text-amber-400">Next hearing: {{ hearing.next_hearing_date.strftime('%d %b %Y') }}</p>
+                {% endif %}
             </div>
-
-            <!-- Dynamic Timeline -->
-            <div class="glass p-6 rounded-2xl border border-white/10 animate-fade-in-up" style="animation-delay: 0.2s">
-                <h3 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-6">Case Workflow</h3>
-                <div id="timeline-container" class="space-y-0 relative border-l-2 border-slate-700 ml-3">
-                    <!-- Populated by JS -->
-                </div>
-            </div>
-
+            {% else %}
+            <p class="text-slate-600 text-sm text-center py-10 border border-dashed border-slate-800 rounded-xl">No
+                hearings recorded yet.</p>
+            {% endfor %}
         </div>
+    </div>
 
-        <!-- Right Col: Event Log & Docs (1/3) -->
-        <div class="space-y-6">
-
-            <!-- Event History -->
-            <div class="glass p-6 rounded-2xl border border-white/10 animate-fade-in-up" style="animation-delay: 0.3s">
-                <h3 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4">Event History</h3>
-                <div class="space-y-4 max-h-[400px] overflow-y-auto custom-scrollbar pr-2">
-                    {% for event in case.events|reverse %}
-                    <div
-                        class="relative pl-6 pb-2 border-l border-slate-700 last:border-0 hover:border-indigo-500/50 transition-colors group">
-                        <div
-                            class="absolute -left-[5px] top-1.5 w-2.5 h-2.5 rounded-full bg-slate-600 group-hover:bg-indigo-500 transition-colors">
-                        </div>
-                        <p class="text-xs text-slate-500 mb-0.5">{{ event.date.strftime('%b %d, %Y') }}</p>
-                        <h4 class="text-white font-medium text-sm">{{ event.title }}</h4>
-                        <span
-                            class="inline-block mt-1 px-2 py-0.5 rounded text-[10px] bg-slate-800 text-slate-300 border border-white/5">
-                            {{ event.type }}
-                        </span>
-                    </div>
-                    {% else %}
-                    <p class="text-slate-500 text-sm text-center py-4">No events recorded yet.</p>
-                    {% endfor %}
-                </div>
+    <!-- JUDGMENT TAB -->
+    <div id="tab-judgment" class="tab-content hidden space-y-6">
+        {% if case.judgment %}
+        <div class="glass p-8 rounded-2xl border border-amber-500/20 bg-amber-500/5 text-center">
+            <div class="w-16 h-16 mx-auto rounded-full bg-amber-500/20 flex items-center justify-center mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-amber-400" fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" />
+                </svg>
             </div>
-
-            <!-- Documents (Mini) -->
-            <div class="glass p-6 rounded-2xl border border-white/10 animate-fade-in-up" style="animation-delay: 0.4s">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-sm font-bold text-slate-400 uppercase tracking-wider">Documents</h3>
-                    <button class="text-indigo-400 hover:text-indigo-300 text-xs font-medium">+ Add</button>
-                </div>
-                <div class="space-y-3">
-                    {% for doc in case.documents %}
-                    <div
-                        class="flex items-center gap-3 p-3 rounded-lg bg-slate-800/50 border border-white/5 hover:border-white/10 transition-colors">
-                        <div class="w-8 h-8 rounded bg-indigo-500/20 flex items-center justify-center text-indigo-400">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
-                                stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                            </svg>
-                        </div>
-                        <div class="flex-1 min-w-0">
-                            <h4 class="text-white text-sm font-medium truncate">{{ doc.title }}</h4>
-                            <p class="text-xs text-slate-500">{{ doc.doc_type }}</p>
-                        </div>
-                    </div>
-                    {% else %}
-                    <p class="text-slate-500 text-sm text-center py-4">No documents.</p>
-                    {% endfor %}
-                </div>
+            <p class="text-xs text-amber-400 uppercase tracking-wider mb-2">Final Judgment</p>
+            <h2 class="text-2xl font-bold text-white mb-2">{{ case.judgment.verdict }}</h2>
+            <p class="text-slate-400 text-sm mb-4">{{ case.judgment.date.strftime('%d %B %Y') }}{% if
+                case.judgment.pronounced_by %} • Hon. {{ case.judgment.pronounced_by }}{% endif %}</p>
+            {% if case.judgment.summary %}
+            <div class="bg-slate-800/50 rounded-xl p-4 text-left mt-4 max-w-2xl mx-auto">
+                <p class="text-xs text-slate-500 mb-1 font-semibold">Summary:</p>
+                <p class="text-slate-300 text-sm leading-relaxed">{{ case.judgment.summary }}</p>
             </div>
-
+            {% endif %}
         </div>
+        {% else %}
+        <div class="text-center py-16">
+            <p class="text-slate-500 mb-4">No judgment has been pronounced yet.</p>
+            {% if case.status != 'Closed' %}
+            <button onclick="openJudgmentModal()"
+                class="bg-amber-600 hover:bg-amber-500 text-white text-sm px-6 py-3 rounded-xl transition-all shadow-lg shadow-amber-500/20">
+                ⚖️ Record Judgment
+            </button>
+            {% endif %}
+        </div>
+        {% endif %}
     </div>
 </div>
 
-<!-- Add Event Modal -->
-<div id="event-modal" class="fixed inset-0 z-50 hidden">
-    <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeEventModal()"></div>
+<!-- ADD EVIDENCE MODAL -->
+<div id="doc-modal" class="fixed inset-0 z-50 hidden">
+    <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeDocModal()"></div>
     <div
-        class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md bg-slate-900 border border-white/10 rounded-2xl p-6 shadow-2xl">
-        <h3 class="text-xl font-bold text-white mb-4">Record New Event</h3>
-        <form id="add-event-form" class="space-y-4">
+        class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg bg-slate-900 border border-white/10 rounded-2xl p-6 shadow-2xl">
+        <h3 class="text-xl font-bold text-white mb-1">Add Evidence Document</h3>
+        <p class="text-xs text-slate-500 mb-4">Party: <span id="doc-party-label" class="font-bold"></span></p>
+        <form id="doc-form" class="space-y-4">
+            <input type="hidden" name="party" id="doc-party-input">
             <div>
-                <label class="block text-sm text-slate-400 mb-1">Event Title</label>
+                <label class="block text-sm text-slate-400 mb-1">Document Title *</label>
                 <input type="text" name="title" required
-                    class="w-full bg-slate-800 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    class="w-full bg-slate-800/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                    placeholder="e.g. Witness Statement of Ram Kumar">
             </div>
             <div>
-                <label class="block text-sm text-slate-400 mb-1">Date</label>
-                <input type="date" name="date" required
-                    class="w-full bg-slate-800 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
-            </div>
-            <div>
-                <label class="block text-sm text-slate-400 mb-1">Stage Update</label>
-                <select name="stage_selection"
-                    class="w-full bg-slate-800 border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                    <option value="current">Current: {{ case.current_stage }}</option>
-                    {% if next_stage %}
-                    <option value="{{ next_stage }}">Move to: {{ next_stage }}</option>
-                    {% else %}
-                    <option disabled>Case Closed</option>
-                    {% endif %}
+                <label class="block text-sm text-slate-400 mb-1">Document Type *</label>
+                <select name="doc_type" required
+                    class="w-full bg-slate-800/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                    <option value="Affidavit">Affidavit</option>
+                    <option value="Witness Statement">Witness Statement</option>
+                    <option value="Property Deed">Property Deed</option>
+                    <option value="Medical Report">Medical Report</option>
+                    <option value="Financial Record">Financial Record</option>
+                    <option value="Contract">Contract</option>
+                    <option value="Legal Notice">Legal Notice</option>
+                    <option value="Other">Other</option>
                 </select>
             </div>
-            <div class="pt-2">
+            <div>
+                <label class="block text-sm text-slate-400 mb-1">Content / Description *</label>
+                <p class="text-[10px] text-slate-600 mb-1">📝 Only textual evidence is accepted. Paste or type the
+                    document text below.</p>
+                <textarea name="content" rows="5" required
+                    class="w-full bg-slate-800/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                    placeholder="Paste or type the document content here..."></textarea>
+            </div>
+            <div class="flex gap-3 pt-2">
+                <button type="button" onclick="closeDocModal()"
+                    class="flex-1 py-3 text-slate-400 border border-white/10 rounded-xl hover:bg-white/5 transition-all">Cancel</button>
                 <button type="submit"
-                    class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2 rounded-xl transition-all">Save
-                    Event</button>
+                    class="flex-1 py-3 bg-amber-600 hover:bg-amber-500 text-white rounded-xl font-bold transition-all">Submit
+                    Evidence</button>
             </div>
         </form>
     </div>
 </div>
 
-<script>
-    const caseId = "{{ case.id }}";
-    const caseType = "{{ case.case_type }}";
-    const currentStage = "{{ case.current_stage }}";
-
-    // 1. Load Next Step
-    async function loadGuidance() {
-        const res = await fetch(`/case-next-steps?stage=${currentStage}&case_type=${caseType}`);
-        const data = await res.json();
-        document.getElementById('next-step-text').textContent = data.recommendation;
-    }
-
-    // 2. Load Timeline
-    async function loadTimeline() {
-        const res = await fetch(`/case-timeline?case_id=${caseId}`);
-        const data = await res.json();
-        const container = document.getElementById('timeline-container');
-
-        container.innerHTML = data.timeline.map((item, index) => {
-            const isCompleted = item.status === 'Completed';
-            const isCurrent = item.status === 'Current';
-
-            const colorClass = isCurrent ? 'bg-indigo-500 border-indigo-500 shadow-[0_0_15px_rgba(99,102,241,0.5)]'
-                : (isCompleted ? 'bg-emerald-500 border-emerald-500' : 'bg-slate-700 border-slate-600');
-
-            const textClass = isCurrent ? 'text-white font-bold'
-                : (isCompleted ? 'text-slate-300' : 'text-slate-500');
-
-            return `
-            <div class="relative pl-8 pb-8 last:pb-0 animate-fade-in-up" style="animation-delay: ${index * 0.05}s">
-                <!-- Dot -->
-                <div class="absolute -left-[9px] top-1 w-4 h-4 rounded-full border-2 ${colorClass} transition-all z-10"></div>
-                
-                <!-- Content -->
+<!-- ADD HEARING MODAL -->
+<div id="hearing-modal" class="fixed inset-0 z-50 hidden">
+    <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeHearingModal()"></div>
+    <div
+        class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg bg-slate-900 border border-white/10 rounded-2xl p-6 shadow-2xl">
+        <h3 class="text-xl font-bold text-white mb-4">Record Hearing</h3>
+        <form id="hearing-form" class="space-y-4">
+            <div class="grid grid-cols-2 gap-4">
                 <div>
-                    <h4 class="${textClass} text-sm">${item.stage}</h4>
-                    ${isCurrent ? `<p class="text-xs text-indigo-300 mt-1">${item.description}</p>` : ''}
+                    <label class="block text-sm text-slate-400 mb-1">Hearing Date *</label>
+                    <input type="date" name="date" required
+                        class="w-full bg-slate-800/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-sm text-slate-400 mb-1">Next Hearing Date</label>
+                    <input type="date" name="next_hearing_date"
+                        class="w-full bg-slate-800/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none">
                 </div>
             </div>
-            `;
-        }).join('');
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm text-slate-400 mb-1">Court Name</label>
+                    <input type="text" name="court_name"
+                        class="w-full bg-slate-800/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                        placeholder="e.g. District Court, Delhi">
+                </div>
+                <div>
+                    <label class="block text-sm text-slate-400 mb-1">Judge Name</label>
+                    <input type="text" name="judge_name"
+                        class="w-full bg-slate-800/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                        placeholder="e.g. Justice A.K. Sharma">
+                </div>
+            </div>
+            <div>
+                <label class="block text-sm text-slate-400 mb-1">Observation / Notes</label>
+                <textarea name="observation" rows="4"
+                    class="w-full bg-slate-800/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                    placeholder="What happened in this hearing..."></textarea>
+            </div>
+            <div class="flex gap-3 pt-2">
+                <button type="button" onclick="closeHearingModal()"
+                    class="flex-1 py-3 text-slate-400 border border-white/10 rounded-xl hover:bg-white/5 transition-all">Cancel</button>
+                <button type="submit"
+                    class="flex-1 py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-bold transition-all">Save
+                    Hearing</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- JUDGMENT MODAL -->
+<div id="judgment-modal" class="fixed inset-0 z-50 hidden">
+    <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeJudgmentModal()"></div>
+    <div
+        class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg bg-slate-900 border border-white/10 rounded-2xl p-6 shadow-2xl">
+        <h3 class="text-xl font-bold text-white mb-4">⚖️ Record Final Judgment</h3>
+        <form id="judgment-form" class="space-y-4">
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm text-slate-400 mb-1">Judgment Date *</label>
+                    <input type="date" name="date" required
+                        class="w-full bg-slate-800/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-sm text-slate-400 mb-1">Verdict *</label>
+                    <select name="verdict" required
+                        class="w-full bg-slate-800/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                        <option value="Favor of Plaintiff">Favor of Plaintiff</option>
+                        <option value="Favor of Defendant">Favor of Defendant</option>
+                        <option value="Dismissed">Dismissed</option>
+                        <option value="Settled">Settled</option>
+                    </select>
+                </div>
+            </div>
+            <div>
+                <label class="block text-sm text-slate-400 mb-1">Pronounced By</label>
+                <input type="text" name="pronounced_by"
+                    class="w-full bg-slate-800/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                    placeholder="Judge's Name">
+            </div>
+            <div>
+                <label class="block text-sm text-slate-400 mb-1">Summary</label>
+                <textarea name="summary" rows="4"
+                    class="w-full bg-slate-800/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                    placeholder="Brief summary of the judgment..."></textarea>
+            </div>
+            <div class="flex gap-3 pt-2">
+                <button type="button" onclick="closeJudgmentModal()"
+                    class="flex-1 py-3 text-slate-400 border border-white/10 rounded-xl hover:bg-white/5 transition-all">Cancel</button>
+                <button type="submit"
+                    class="flex-1 py-3 bg-amber-600 hover:bg-amber-500 text-white rounded-xl font-bold transition-all">Record
+                    Judgment</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+    .tab-btn {
+        color: #64748b;
     }
 
-    // 3. Modal Logic
-    function openEventModal() { document.getElementById('event-modal').classList.remove('hidden'); }
-    function closeEventModal() { document.getElementById('event-modal').classList.add('hidden'); }
+    .tab-btn.active {
+        color: #f59e0b;
+        border-bottom: 2px solid #f59e0b;
+        background: rgba(245, 158, 11, 0.05);
+    }
 
-    async function deleteCase() {
-        if (!confirm("Are you sure you want to delete this case? This action cannot be undone.")) return;
+    .tab-btn:hover:not(.active) {
+        color: #94a3b8;
+        background: rgba(255, 255, 255, 0.03);
+    }
+</style>
 
-        try {
-            const res = await fetch(`/cases/${caseId}`, { method: 'DELETE' });
-            if (res.ok) {
-                window.location.href = '/judicial/tracker';
+<script>
+    const CASE_ID = parseInt(document.querySelector('meta[name="case-id"]').content);
+    const CNR_PATTERN = /^[A-Z]{4}\d{2}\d{6}\d{4}$/;
+
+    // --- CNR Live Validation ---
+    function validateCNRLive(input) {
+        const val = input.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+        input.value = val;
+        const btn = document.getElementById('cnr-submit-btn');
+        const hint = document.getElementById('cnr-hint');
+        const errEl = document.getElementById('cnr-error');
+
+        if (!val) {
+            btn.disabled = true;
+            hint.classList.remove('hidden');
+            errEl.classList.add('hidden');
+            return;
+        }
+
+        if (val.length === 16 && CNR_PATTERN.test(val)) {
+            const year = parseInt(val.slice(12, 16));
+            if (year < 1950 || year > 2099) {
+                btn.disabled = true;
+                errEl.textContent = `Invalid year: ${year}. Must be 1950\u20132099.`;
+                errEl.classList.remove('hidden');
+                hint.classList.add('hidden');
             } else {
-                alert("Failed to delete case.");
+                btn.disabled = false;
+                errEl.classList.add('hidden');
+                hint.classList.add('hidden');
             }
-        } catch (err) {
-            console.error(err);
-            alert("Error deleting case.");
+        } else {
+            btn.disabled = true;
+            if (val.length >= 4 && !/^[A-Z]{4}/.test(val)) {
+                errEl.textContent = 'First 4 characters must be uppercase letters (state+district code)';
+                errEl.classList.remove('hidden');
+                hint.classList.add('hidden');
+            } else if (val.length > 4 && val.length < 16) {
+                hint.classList.remove('hidden');
+                errEl.classList.add('hidden');
+            } else if (val.length === 16) {
+                errEl.textContent = 'Invalid format. Check: 4 letters + 2 digits + 6 digits + 4 digits';
+                errEl.classList.remove('hidden');
+                hint.classList.add('hidden');
+            } else {
+                hint.classList.remove('hidden');
+                errEl.classList.add('hidden');
+            }
         }
     }
 
-    document.getElementById('add-event-form').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const formData = new FormData(e.target);
-        const selection = formData.get('stage_selection');
+    async function submitCNR() {
+        const input = document.getElementById('cnr-input');
+        const btn = document.getElementById('cnr-submit-btn');
+        const errEl = document.getElementById('cnr-error');
+        const cnr = input.value.toUpperCase().trim();
 
-        // Determine Logic
-        let stageImpact = null;
-        if (selection !== 'current') {
-            stageImpact = selection;
-        }
-
-        // Construct Event
-        const event = {
-            title: formData.get('title'),
-            date: formData.get('date'),
-            type: "Filing", // Default type for now or infer? Let's just default to Filing/Other since user cares about Stage. 
-            // Or better: If moving stage, map type? 
-            // For simplicity, we can default type to "Other" or "Procedural" since the Stage is what matters.
-            // However, my backend logic uses Type to infer Stage sometimes. But here we are EXPLICITLY sending stage_impact.
-            // So backend will use stage_impact.
-            type: stageImpact ? "Order" : "Hearing", // Just a dummy mapping for visual. 
-            stage_impact: stageImpact,
-            auto_advance: true
-        };
+        btn.disabled = true;
+        btn.textContent = 'Registering...';
 
         try {
-            const res = await fetch(`/cases/${caseId}/events`, {
-                method: 'POST',
+            const res = await fetch(`/cases/${CASE_ID}/cnr`, {
+                method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(event)
+                body: JSON.stringify({ cnr_number: cnr })
             });
             if (res.ok) {
                 window.location.reload();
             } else {
-                alert("Failed to save event");
+                const data = await res.json();
+                errEl.textContent = data.detail || 'Failed to register CNR.';
+                errEl.classList.remove('hidden');
+                btn.disabled = false;
+                btn.textContent = 'Register CNR';
             }
-        } catch (err) {
-            console.error(err);
+        } catch (e) {
+            errEl.textContent = 'Network error. Please try again.';
+            errEl.classList.remove('hidden');
+            btn.disabled = false;
+            btn.textContent = 'Register CNR';
+        }
+    }
+
+    // --- Delete Case ---
+    document.getElementById('delete-case-btn').addEventListener('click', async () => {
+        if (!confirm('Are you sure you want to permanently delete this case? This action cannot be undone.')) return;
+        try {
+            const res = await fetch('/cases/' + CASE_ID, { method: 'DELETE' });
+            if (res.ok) {
+                window.location.href = '/judicial/tracker';
+            } else {
+                const err = await res.json();
+                alert(err.detail || 'Failed to delete case.');
+            }
+        } catch (e) { console.error(e); alert('Error deleting case.'); }
+    });
+
+    // --- Tab Switching ---
+    function switchTab(tabName) {
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+        document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+        document.getElementById('tab-' + tabName).classList.remove('hidden');
+        document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+    }
+
+    // --- Duration ---
+    const created = new Date("{{ case.created_at.isoformat() }}");
+    const now = new Date();
+    const diffDays = Math.floor((now - created) / (1000 * 60 * 60 * 24));
+    document.getElementById('case-duration').textContent = diffDays > 0 ? diffDays + ' days' : 'Today';
+
+    // --- Timeline ---
+    async function loadTimeline() {
+        try {
+            const res = await fetch(`/case-timeline?case_id=${CASE_ID}`);
+            const data = await res.json();
+            const container = document.getElementById('timeline-container');
+            container.innerHTML = data.timeline.map(t => `
+                <div class="relative pl-8 pb-6">
+                    <div class="absolute left-[-9px] top-0 w-4 h-4 rounded-full border-2
+                        ${t.status === 'Current' ? 'bg-amber-500 border-amber-400 shadow-lg shadow-amber-500/50' :
+                    t.status === 'Completed' ? 'bg-emerald-500 border-emerald-400' : 'bg-slate-700 border-slate-600'}"></div>
+                    <p class="text-sm font-medium ${t.status === 'Current' ? 'text-amber-400' : t.status === 'Completed' ? 'text-emerald-400' : 'text-slate-600'}">${t.stage}</p>
+                    <p class="text-xs text-slate-600 mt-0.5">${t.description || ''}</p>
+                </div>
+            `).join('');
+        } catch (e) { console.error(e); }
+    }
+    loadTimeline();
+
+    // --- Evidence Modal ---
+    function openDocModal(party) {
+        document.getElementById('doc-party-input').value = party;
+        document.getElementById('doc-party-label').textContent = party;
+        document.getElementById('doc-modal').classList.remove('hidden');
+    }
+    function closeDocModal() { document.getElementById('doc-modal').classList.add('hidden'); }
+
+    document.getElementById('doc-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const btn = e.target.querySelector('button[type="submit"]');
+        const origText = btn.textContent;
+        btn.disabled = true; btn.textContent = 'Saving...';
+        const fd = new FormData(e.target);
+        const body = { title: fd.get('title'), content: fd.get('content'), doc_type: fd.get('doc_type'), party: fd.get('party') };
+        try {
+            const res = await fetch(`/cases/${CASE_ID}/documents`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+            if (res.ok) { window.location.reload(); } else { alert('Failed to save.'); btn.disabled = false; btn.textContent = origText; }
+        } catch (err) { console.error(err); btn.disabled = false; btn.textContent = origText; }
+    });
+
+    // --- Delegated Delete Handlers ---
+    document.addEventListener('click', async (e) => {
+        const docBtn = e.target.closest('.delete-doc-btn');
+        if (docBtn) {
+            e.preventDefault();
+            if (!confirm('Delete this evidence?')) return;
+            const caseId = docBtn.dataset.caseId;
+            const docId = docBtn.dataset.docId;
+            try {
+                const res = await fetch(`/cases/${caseId}/documents/${docId}`, { method: 'DELETE' });
+                if (res.ok) window.location.reload();
+            } catch (err) { console.error(err); }
+        }
+
+        const hearingBtn = e.target.closest('.delete-hearing-btn');
+        if (hearingBtn) {
+            e.preventDefault();
+            if (!confirm('Delete this hearing?')) return;
+            const caseId = hearingBtn.dataset.caseId;
+            const hearingId = hearingBtn.dataset.hearingId;
+            try {
+                const res = await fetch(`/cases/${caseId}/hearings/${hearingId}`, { method: 'DELETE' });
+                if (res.ok) window.location.reload();
+            } catch (err) { console.error(err); }
         }
     });
 
-    // Init
-    loadGuidance();
-    loadTimeline();
+    // --- Hearing Modal ---
+    function openHearingModal() { document.getElementById('hearing-modal').classList.remove('hidden'); }
+    function closeHearingModal() { document.getElementById('hearing-modal').classList.add('hidden'); }
 
+    document.getElementById('hearing-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const btn = e.target.querySelector('button[type="submit"]');
+        const origText = btn.textContent;
+        btn.disabled = true; btn.textContent = 'Saving...';
+        const fd = new FormData(e.target);
+        const body = {
+            date: new Date(fd.get('date')).toISOString(),
+            court_name: fd.get('court_name') || null,
+            judge_name: fd.get('judge_name') || null,
+            observation: fd.get('observation') || null,
+            next_hearing_date: fd.get('next_hearing_date') ? new Date(fd.get('next_hearing_date')).toISOString() : null,
+        };
+        try {
+            const res = await fetch(`/cases/${CASE_ID}/hearings`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+            if (res.ok) { window.location.reload(); } else { alert('Failed to save hearing.'); btn.disabled = false; btn.textContent = origText; }
+        } catch (err) { console.error(err); btn.disabled = false; btn.textContent = origText; }
+    });
+
+    async function deleteHearing(caseId, hearingId) {
+        if (!confirm('Delete this hearing?')) return;
+        try {
+            const res = await fetch(`/cases/${caseId}/hearings/${hearingId}`, { method: 'DELETE' });
+            if (res.ok) window.location.reload();
+        } catch (e) { console.error(e); }
+    }
+
+    // --- Judgment Modal ---
+    function openJudgmentModal() { document.getElementById('judgment-modal').classList.remove('hidden'); }
+    function closeJudgmentModal() { document.getElementById('judgment-modal').classList.add('hidden'); }
+
+    document.getElementById('judgment-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const btn = e.target.querySelector('button[type="submit"]');
+        const origText = btn.textContent;
+        btn.disabled = true; btn.textContent = 'Saving...';
+        const fd = new FormData(e.target);
+        const body = {
+            date: new Date(fd.get('date')).toISOString(),
+            verdict: fd.get('verdict'),
+            summary: fd.get('summary') || null,
+            pronounced_by: fd.get('pronounced_by') || null,
+        };
+        try {
+            const res = await fetch(`/cases/${CASE_ID}/judgment`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+            if (res.ok) { window.location.reload(); } else {
+                const err = await res.json();
+                alert(err.detail || 'Failed to record judgment.');
+                btn.disabled = false; btn.textContent = origText;
+            }
+        } catch (err) { console.error(err); btn.disabled = false; btn.textContent = origText; }
+    });
 </script>
 {% endblock %}

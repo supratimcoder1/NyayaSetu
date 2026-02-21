@@ -16,7 +16,7 @@ class User(Base):
     full_name = Column(String)
     hashed_password = Column(String)
     is_active = Column(Boolean, default=True)
-    role = Column(String, default=UserRole.USER)
+    role = Column(String, default=UserRole.USER.value)
     preferred_language = Column(String, default="en") # en, hi, bn, te
     created_at = Column(DateTime, default=datetime.utcnow)
 
@@ -101,22 +101,37 @@ class CaseEventType(str, enum.Enum):
     EVIDENCE = "Evidence"
     OTHER = "Other"
 
+class PartyRole(str, enum.Enum):
+    PLAINTIFF = "Plaintiff"
+    DEFENDANT = "Defendant"
+
 class Case(Base):
     __tablename__ = "cases"
 
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"))
-    title = Column(String)
-    description = Column(Text, nullable=True) # New Field
-    case_type = Column(String) # Enum
-    status = Column(String, default=CaseStatus.OPEN) # Enum
-    current_stage = Column(String, default=CaseStage.PRE_FILING) # Enum
+    title = Column(String, nullable=False)
+    description = Column(Text, nullable=False)  # REQUIRED
+    case_type = Column(String)
+    status = Column(String, default=CaseStatus.OPEN.value)
+    current_stage = Column(String, default=CaseStage.PRE_FILING.value)
+    cnr_number = Column(String(16), unique=True, nullable=True, index=True)  # Court-assigned CNR after filing
+
+    # Party Information
+    plaintiff_name = Column(String, nullable=False)
+    defendant_name = Column(String, nullable=False)
+    plaintiff_lawyer = Column(String, default="Public Prosecutor")
+    defendant_lawyer = Column(String, default="Public Prosecutor")
+    user_role = Column(String, default=PartyRole.PLAINTIFF.value)  # User's role in this case
+
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow)
 
     owner = relationship("User", back_populates="cases")
     events = relationship("CaseEvent", back_populates="case", cascade="all, delete-orphan")
     documents = relationship("CaseDocument", back_populates="case", cascade="all, delete-orphan")
+    hearings = relationship("Hearing", back_populates="case", cascade="all, delete-orphan", order_by="Hearing.date")
+    judgment = relationship("Judgment", back_populates="case", uselist=False, cascade="all, delete-orphan")
 
 class CaseEvent(Base):
     __tablename__ = "case_events"
@@ -126,11 +141,11 @@ class CaseEvent(Base):
     title = Column(String)
     date = Column(DateTime)
     description = Column(Text)
-    type = Column(String, default=CaseEventType.OTHER) # CaseEventType Enum
+    type = Column(String, default=CaseEventType.OTHER.value)
     
     # Event-Driven Logic Fields
-    stage_impact = Column(String, nullable=True) # If set, this event triggers a stage change (CaseStage Enum)
-    auto_advance = Column(Boolean, default=True) # Whether to auto-apply the stage change
+    stage_impact = Column(String, nullable=True)
+    auto_advance = Column(Boolean, default=True)
 
     case = relationship("Case", back_populates="events")
 
@@ -139,20 +154,50 @@ class CaseDocument(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     case_id = Column(Integer, ForeignKey("cases.id"))
-    title = Column(String)
-    content = Column(Text) # Extracted text or summary
-    doc_type = Column(String) # User-defined type e.g., "Draft", "Reference"
+    title = Column(String, nullable=False)
+    content = Column(Text)  # Text content of the evidence
+    doc_type = Column(String)  # e.g., "Affidavit", "Witness Statement", "Property Deed"
+    party = Column(String, default=PartyRole.PLAINTIFF.value)  # Whose evidence: "Plaintiff" or "Defendant"
     
     # Enhanced File Handling
-    file_path = Column(String, nullable=True) # Path to stored file
-    mime_type = Column(String, nullable=True) # e.g., application/pdf
+    file_path = Column(String, nullable=True)
+    mime_type = Column(String, nullable=True)
     uploaded_at = Column(DateTime, default=datetime.utcnow)
-    ai_summary = Column(Text, nullable=True) # AI-generated summary
+    ai_summary = Column(Text, nullable=True)
     
     # Optional Link to Event
     event_id = Column(Integer, ForeignKey("case_events.id"), nullable=True)
 
     case = relationship("Case", back_populates="documents")
+
+class Hearing(Base):
+    """Dedicated hearing records for a case."""
+    __tablename__ = "hearings"
+
+    id = Column(Integer, primary_key=True, index=True)
+    case_id = Column(Integer, ForeignKey("cases.id"))
+    date = Column(DateTime, nullable=False)
+    court_name = Column(String, nullable=True)
+    judge_name = Column(String, nullable=True)
+    observation = Column(Text, nullable=True)  # What happened / judge's observation
+    next_hearing_date = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    case = relationship("Case", back_populates="hearings")
+
+class Judgment(Base):
+    """Final judgment for a case."""
+    __tablename__ = "judgments"
+
+    id = Column(Integer, primary_key=True, index=True)
+    case_id = Column(Integer, ForeignKey("cases.id"), unique=True)
+    date = Column(DateTime, nullable=False)
+    verdict = Column(String, nullable=False)  # "Favor of Plaintiff", "Favor of Defendant", "Dismissed", "Settled"
+    summary = Column(Text, nullable=True)
+    pronounced_by = Column(String, nullable=True)  # Judge name
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    case = relationship("Case", back_populates="judgment")
 
 class JudicialChatSession(Base):
     __tablename__ = "judicial_chat_sessions"

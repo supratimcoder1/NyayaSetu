@@ -1,0 +1,45 @@
+================================================================
+   DEMO CNR NUMBERS — KOLKATA COURTS (West Bengal)
+================================================================
+
+Format: [STATE+DISTRICT (4 letters)][COURT (2 digits)][SERIAL (6 digits)][YEAR (4 digits)]
+
+
+--- City Civil Court, Kolkata ---
+WBCC010001012024
+WBCC010001022024
+WBCC010001032025
+WBCC020005672025
+WBCC030012342026
+
+--- Alipore District Court ---
+WBAL010002012024
+WBAL020003452025
+WBAL010007892026
+
+--- Barasat District Court ---
+WBBR010004562024
+WBBR020006782025
+
+--- Kolkata High Court ---
+WBHC010000012024
+WBHC010000022025
+WBHC020000032026
+
+--- Sealdah Court ---
+WBSD010001232025
+WBSD010004562026
+
+================================================================
+   KEY
+================================================================
+WB   = West Bengal (State)
+CC   = City Civil Court
+AL   = Alipore
+BR   = Barasat
+HC   = High Court
+SD   = Sealdah
+
+All CNRs above pass the app's validation regex:
+  ^[A-Z]{4}\d{2}\d{6}\d{4}$
+================================================================

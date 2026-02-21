@@ -101,13 +101,17 @@ async def judicial_guidance_page(request: Request, session_id: int = None, user:
         
     if current_session:
         messages = db.query(models.JudicialMessage).filter(models.JudicialMessage.session_id == current_session.id).order_by(models.JudicialMessage.timestamp.asc()).all()
+    
+    # Fetch user's cases for the case selector
+    user_cases = db.query(models.Case).filter(models.Case.user_id == user.id).order_by(models.Case.updated_at.desc()).all()
         
     return templates.TemplateResponse("judicial_guidance.html", {
         "request": request, 
         "user": user, 
         "sessions": sessions, 
         "current_session": current_session,
-        "messages": messages
+        "messages": messages,
+        "user_cases": user_cases
     })
 
 @router.get("/cases/{case_id}", response_class=HTMLResponse)
@@ -117,7 +121,15 @@ async def get_case_details_page(request: Request, case_id: int, user: models.Use
     
     case = db.query(models.Case).filter(models.Case.id == case_id, models.Case.user_id == user.id).first()
     if not case:
-        raise HTTPException(status_code=404, detail="Case not found")
+        return templates.TemplateResponse("error_page.html", {
+            "request": request,
+            "user": user,
+            "error_code": 404,
+            "error_title": "Case Not Found",
+            "error_message": f"Case #{case_id} does not exist or you don't have access to it.",
+            "back_url": "/judicial/tracker",
+            "back_label": "Back to Tracker"
+        }, status_code=404)
         
     next_stage = judicial_engine.get_next_stage(case.current_stage)
         

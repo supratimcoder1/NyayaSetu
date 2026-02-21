@@ -263,7 +263,7 @@ ANSWER:
                                     markdown_output += f"\n* {content}\n"
                         final_response_text = markdown_output
                         success = True
-                    except:
+                    except Exception:
                         final_response_text = response.text # Giving up
                         success = True
                 else:
@@ -281,10 +281,11 @@ ANSWER:
     return final_response_text
 
 
-def query_judicial_rag(query_text: str, history: list = None, language: str = "en", user=None, db=None):
+def query_judicial_rag(query_text: str, history: list = None, language: str = "en", user=None, db=None, focused_case_id: int = None):
     """
     RAG Logic specifically for Judicial Procedural Guidance.
     Prioritizes User's Case Data over general legal documents.
+    If focused_case_id is provided, gives deep context for that specific case.
     """
     if not settings.GEMINI_API_KEY:
         return "Error: GEMINI_API_KEY not found in .env settings."
@@ -292,20 +293,114 @@ def query_judicial_rag(query_text: str, history: list = None, language: str = "e
     # 1. Fetch User's Cases (Primary Data Source)
     judicial_context = ""
     user_cases = []
+    focused_case = None
     if user and db:
         user_cases = db.query(models.Case).filter(models.Case.user_id == user.id).all()
         
-        if user_cases:
-            judicial_context = "\nUSER'S ACTIVE LEGAL CASES:\n"
+        # If a specific case is focused, find it
+        if focused_case_id:
+            focused_case = next((c for c in user_cases if c.id == focused_case_id), None)
+        
+        if focused_case:
+            # DEEP context for the focused case
+            c = focused_case
+            judicial_context = f"\n=== FOCUSED CASE (User is asking about this case) ===\n"
+            judicial_context += f"Case #{c.id}: {c.title}\n"
+            judicial_context += f"CNR: {c.cnr_number or 'Not yet registered'}\n"
+            judicial_context += f"Type: {c.case_type} | Status: {c.status} | Current Stage: {c.current_stage}\n"
+            judicial_context += f"Description: {c.description}\n"
+            judicial_context += f"Plaintiff: {c.plaintiff_name} (Lawyer: {c.plaintiff_lawyer})\n"
+            judicial_context += f"Defendant: {c.defendant_name} (Lawyer: {c.defendant_lawyer})\n"
+            judicial_context += f"User's Role: {c.user_role}\n"
+            judicial_context += f"Registered: {c.created_at.strftime('%d %b %Y')}\n"
+            
+            # All hearing details
+            if c.hearings:
+                judicial_context += f"\nHEARINGS ({len(c.hearings)} total):\n"
+                for i, h in enumerate(c.hearings, 1):
+                    judicial_context += f"  {i}. {h.date.strftime('%d %b %Y')}"
+                    if h.court_name:
+                        judicial_context += f" at {h.court_name}"
+                    if h.judge_name:
+                        judicial_context += f" (Judge: {h.judge_name})"
+                    if h.observation:
+                        judicial_context += f" — {h.observation}"
+                    if h.next_hearing_date:
+                        judicial_context += f" | Next: {h.next_hearing_date.strftime('%d %b %Y')}"
+                    judicial_context += "\n"
+            else:
+                judicial_context += "\nHEARINGS: None recorded yet.\n"
+            
+            # All evidence details
+            if c.documents:
+                judicial_context += f"\nEVIDENCE ({len(c.documents)} documents):\n"
+                for d in c.documents:
+                    judicial_context += f"  - [{d.party}] {d.title} ({d.doc_type or 'General'})"
+                    if d.content:
+                        judicial_context += f": {d.content[:150]}"
+                    judicial_context += "\n"
+            else:
+                judicial_context += "\nEVIDENCE: No documents submitted yet.\n"
+            
+            # Judgment
+            if c.judgment:
+                judicial_context += f"\nJUDGMENT: {c.judgment.verdict} on {c.judgment.date.strftime('%d %b %Y')}\n"
+                if c.judgment.summary:
+                    judicial_context += f"Summary: {c.judgment.summary}\n"
+                if c.judgment.pronounced_by:
+                    judicial_context += f"Pronounced by: {c.judgment.pronounced_by}\n"
+            
+            # Timeline and next steps
+            timeline = judicial_engine.generate_timeline(c.events, c.current_stage)
+            next_step = judicial_engine.recommend_next_step(c.current_stage, c.case_type)
+            judicial_context += f"\nRecommended Next Step: {next_step}\n"
+            
+            # Other cases (brief summary)
+            other_cases = [oc for oc in user_cases if oc.id != focused_case_id]
+            if other_cases:
+                judicial_context += f"\nUser also has {len(other_cases)} other case(s): "
+                judicial_context += ", ".join([f"{oc.title} ({oc.current_stage})" for oc in other_cases])
+                judicial_context += "\n"
+        
+        elif user_cases:
+            judicial_context = "\nUSER'S LEGAL CASES:\n"
             for case in user_cases:
-                judicial_context += f"- Case ID: {case.id} | Title: {case.title} | Type: {case.case_type} | Status: {case.status} | Stage: {case.current_stage} | Description: {case.description or 'N/A'}\n"
+                judicial_context += f"\n--- CASE #{case.id}: {case.title} ---\n"
+                judicial_context += f"  CNR: {case.cnr_number or 'Not registered'}\n"
+                judicial_context += f"  Type: {case.case_type} | Status: {case.status} | Stage: {case.current_stage}\n"
+                judicial_context += f"  Description: {case.description or 'N/A'}\n"
+                judicial_context += f"  Plaintiff: {case.plaintiff_name} (Lawyer: {case.plaintiff_lawyer})\n"
+                judicial_context += f"  Defendant: {case.defendant_name} (Lawyer: {case.defendant_lawyer})\n"
+                judicial_context += f"  User's Role: {case.user_role}\n"
+                judicial_context += f"  Registered: {case.created_at.strftime('%d %b %Y')}\n"
+                
+                # Hearing info
+                if case.hearings:
+                    judicial_context += f"  Total Hearings: {len(case.hearings)}\n"
+                    last_hearing = case.hearings[-1]
+                    judicial_context += f"  Last Hearing: {last_hearing.date.strftime('%d %b %Y')}"
+                    if last_hearing.observation:
+                        judicial_context += f" — {last_hearing.observation[:100]}"
+                    judicial_context += "\n"
+                    if last_hearing.next_hearing_date:
+                        judicial_context += f"  Next Hearing: {last_hearing.next_hearing_date.strftime('%d %b %Y')}\n"
+                
+                # Evidence info  
+                plaintiff_docs = [d for d in case.documents if d.party == 'Plaintiff']
+                defendant_docs = [d for d in case.documents if d.party == 'Defendant']
+                judicial_context += f"  Evidence: {len(plaintiff_docs)} from Plaintiff, {len(defendant_docs)} from Defendant\n"
+                
+                # Judgment info
+                if case.judgment:
+                    judicial_context += f"  JUDGMENT: {case.judgment.verdict} on {case.judgment.date.strftime('%d %b %Y')}\n"
+                    if case.judgment.summary:
+                        judicial_context += f"  Judgment Summary: {case.judgment.summary[:200]}\n"
                 
                 # Add timeline/next steps if relevant to query
                 if str(case.id) in query_text or case.title.lower() in query_text.lower() or "my case" in query_text.lower():
                      timeline = judicial_engine.generate_timeline(case.events, case.current_stage)
                      next_step = judicial_engine.recommend_next_step(case.current_stage, case.case_type)
-                     judicial_context += f"  - Recommended Next Step: {next_step}\n"
-                     # judicial_context += f"  - Standard Timeline: {[t['stage'] for t in timeline]}\n" # Timeline might be too long, add only if asked
+                     judicial_context += f"  Recommended Next Step: {next_step}\n"
         else:
             judicial_context = "\nUSER'S CASES: No active cases registered in the system.\n"
 
@@ -345,19 +440,35 @@ def query_judicial_rag(query_text: str, history: list = None, language: str = "e
     }
     target_lang = lang_map.get(language, "English")
 
+    # Build focused case prompt enhancement
+    focused_prompt_addition = ""
+    if focused_case:
+        focused_prompt_addition = f"""
+
+CRITICAL: The user has selected Case #{focused_case.id} ("{focused_case.title}") for this consultation.
+All your responses MUST be about THIS specific case unless the user explicitly asks about something else.
+Refer to the case by name and provide ACTIONABLE, SPECIFIC advice based on the case data above.
+If the user's lawyer is 'Public Prosecutor', note that the user is representing themselves (pro se / in-person) and needs extra procedural guidance.
+"""
+
     system_prompt = f"""You are the Judicial Procedural Guide of NyayaSetu.
 Your role is to assist users specifically with their court cases and procedural queries.
-You have access to their registered cases in the system.
-
+You have access to their registered cases in the system, including party details, hearings, evidence, and judgments.
+{focused_prompt_addition}
 IMPORTANT: You MUST answer in **{target_lang}** language.
 
 GUIDELINES:
 1. IF the user asks about "my case" and cases exist in context, REFER specifically to those cases by ID/Title.
-2. IF the user asks about "my case" but has NO cases, guide them on how to file a new case using the "Case Intake" module.
-3. IF the user asks general procedural questions (e.g. "How to get bail"), provide standard legal procedure steps using the General Legal Context.
-4. BE CONCISE and ACTION-ORIENTED. Focus on the "Next Step".
-5. Do not prioritize general legal theory over specific case status.
-6. Speak in a professional, empathetic, and authoritative judicial tone.
+2. The user's role (Plaintiff or Defendant) is specified in the case data. TAILOR your advice to their role:
+   - If user is PLAINTIFF: Focus on burden of proof, filing strategies, evidence presentation.
+   - If user is DEFENDANT: Focus on defense strategies, counter-arguments, rights of the accused.
+3. IF the user asks about "my case" but has NO cases, guide them on how to file a new case using the "Case Intake" module.
+4. IF the user asks general procedural questions, provide standard legal procedure steps using the General Legal Context.
+5. BE CONCISE and ACTION-ORIENTED. Focus on the "Next Step".
+6. Do not prioritize general legal theory over specific case status.
+7. Speak in a professional, empathetic, and authoritative judicial tone.
+8. Reference hearing history and evidence when relevant to the user's query.
+9. If the user has a Public Prosecutor as their lawyer, provide more detailed procedural guidance since they may be self-representing.
 """
 
     full_prompt = f"""{system_prompt}

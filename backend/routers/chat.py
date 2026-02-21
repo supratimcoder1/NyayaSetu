@@ -2,8 +2,11 @@ from fastapi import APIRouter, Depends, HTTPException, Cookie, Response
 from sqlalchemy.orm import Session
 from typing import Optional
 from datetime import datetime
+import logging
 from .. import schemas, models, database, auth
 from ..rag_engine import query_rag, query_judicial_rag
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["Chat"])
 
@@ -39,7 +42,12 @@ async def chat_session_endpoint(request: schemas.ChatRequest, user: models.User 
         if msg.id != user_msg.id:
              history_context.append({"role": msg.role, "content": msg.content})
 
-    response_text = query_rag(request.message, history=history_context, language=user.preferred_language, user=user, db=db)
+    response_text = ""
+    try:
+        response_text = query_rag(request.message, history=history_context, language=user.preferred_language, user=user, db=db)
+    except Exception as e:
+        logger.error(f"RAG error: {e}", exc_info=True)
+        response_text = "I'm sorry, there was an internal error processing your request. Please try again."
     
     ai_msg = models.Message(session_id=session.id, role="ai", content=response_text)
     db.add(ai_msg)
@@ -55,15 +63,19 @@ async def chat_endpoint(request: schemas.ChatRequest, response: Response, chat_c
     if chat_count:
         try:
             current_count = int(chat_count)
-        except:
+        except Exception:
             current_count = 0
             
     if current_count >= 5:
         return schemas.ChatResponse(response="You have reached the free limit of 5 messages. Please [Login](/login) or [Register](/register) to continue.")
 
-    response_text = query_rag(request.message, language="en")
+    try:
+        response_text = query_rag(request.message, language="en")
+    except Exception as e:
+        logger.error(f"Guest chat RAG error: {e}", exc_info=True)
+        response_text = "I'm sorry, there was an error processing your request. Please try again."
     
-    response.set_cookie(key="chat_count", value=str(current_count + 1), max_age=86400)
+    response.set_cookie(key="chat_count", value=str(current_count + 1), max_age=86400, samesite="lax")
     
     return schemas.ChatResponse(response=response_text)
 
@@ -118,10 +130,9 @@ async def judicial_chat_session_endpoint(request: schemas.ChatRequest, user: mod
     db.commit()
 
     try:
-        response_text = query_judicial_rag(request.message, history=history_context, language=user.preferred_language, user=user, db=db)
+        response_text = query_judicial_rag(request.message, history=history_context, language=user.preferred_language, user=user, db=db, focused_case_id=request.case_id)
     except Exception as e:
-        import logging
-        logging.getLogger(__name__).error(f"Judicial RAG error: {e}", exc_info=True)
+        logger.error(f"Judicial RAG error: {e}", exc_info=True)
         response_text = "I'm sorry, there was an internal error processing your request. Please try again."
     
     ai_msg = models.JudicialMessage(session_id=session.id, role="ai", content=response_text)

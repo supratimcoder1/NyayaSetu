@@ -30,7 +30,8 @@
                         <th class="px-6 py-4">Email</th>
                         <th class="px-6 py-4">Role</th>
                         <th class="px-6 py-4">Language</th>
-                        <th class="px-6 py-4 text-right">Joined</th>
+                        <th class="px-6 py-4">Joined</th>
+                        <th class="px-6 py-4 text-right">Actions</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-white/5">
@@ -64,8 +65,23 @@
                             {% elif u.preferred_language == 'te' %} Telugu
                             {% else %} English {% endif %}
                         </td>
-                        <td class="px-6 py-4 text-right text-slate-500">
+                        <td class="px-6 py-4 text-slate-500">
                             {{ u.created_at.strftime('%Y-%m-%d') if u.created_at else 'N/A' }}
+                        </td>
+                        <td class="px-6 py-4 text-right">
+                            {% if u.id != user.id %}
+                            <button onclick="deleteUser({{ u.id }}, '{{ u.email }}')"
+                                class="text-slate-400 hover:text-red-400 hover:bg-red-400/10 p-2 rounded-lg transition-colors"
+                                title="Delete User">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                                    stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                            </button>
+                            {% else %}
+                            <span class="text-xs text-slate-600 block px-2 py-2">Current</span>
+                            {% endif %}
                         </td>
                     </tr>
                     {% endfor %}
@@ -74,4 +90,30 @@
         </div>
     </div>
 </div>
+
+<script>
+    async function deleteUser(userId, email) {
+        if (!confirm(`Are you absolutely sure you want to permanently delete the user (${email}) and all their associated data (cases, chats, documents)? This cannot be undone.`)) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`/admin/users/${userId}`, {
+                method: 'DELETE',
+            });
+
+            const data = await response.json().catch(() => ({}));
+
+            if (response.ok) {
+                // Reload the page to show the updated table
+                window.location.reload();
+            } else {
+                alert(data.detail || "Failed to delete user. They might have active dependencies or you might lack permissions.");
+            }
+        } catch (error) {
+            console.error("Error deleting user:", error);
+            alert("An unexpected error occurred while trying to delete the user.");
+        }
+    }
+</script>
 {% endblock %}

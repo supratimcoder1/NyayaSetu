@@ -66,6 +66,38 @@
         </div>
         {% endif %}
 
+        <!-- Case Selector Bar -->
+        <div class="px-4 py-2 border-b border-white/5 bg-slate-900/60 flex items-center gap-3">
+            <label for="case-selector" class="text-xs text-slate-500 whitespace-nowrap font-medium">📋 Case:</label>
+            <select id="case-selector"
+                class="flex-1 bg-slate-800/80 text-white text-sm border border-white/10 rounded-lg px-3 py-1.5 
+                focus:border-amber-500/50 focus:ring-1 focus:ring-amber-500/20 outline-none appearance-none cursor-pointer">
+                <option value="">All cases (general guidance)</option>
+                {% for c in user_cases %}
+                <option value="{{ c.id }}" {% if c.cnr_number %}data-cnr="{{ c.cnr_number }}" {% endif %}
+                    data-stage="{{ c.current_stage }}" data-type="{{ c.case_type }}">
+                    {{ c.title }} — {{ c.current_stage }}{% if c.cnr_number %} ({{ c.cnr_number }}){% endif %}
+                </option>
+                {% endfor %}
+            </select>
+            <div id="case-badge"
+                class="hidden px-2 py-1 rounded-lg text-[10px] font-bold bg-cyan-500/20 text-cyan-400 border border-cyan-500/20 whitespace-nowrap">
+            </div>
+        </div>
+
+        <!-- Focused Case Context Card -->
+        <div id="focused-case-card" class="hidden mx-4 mt-2 p-3 rounded-xl border border-amber-500/20 bg-amber-500/5">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <span class="text-amber-400 text-sm">🎯</span>
+                    <span class="text-xs text-amber-400 font-bold" id="focused-case-title"></span>
+                </div>
+                <span class="text-[10px] text-slate-500" id="focused-case-meta"></span>
+            </div>
+            <p class="text-xs text-slate-400 mt-1" id="focused-case-hint">AI will provide specific guidance for this
+                case.</p>
+        </div>
+
         <!-- Messages Container -->
         <div id="chat-history" class="flex-1 overflow-y-auto p-6 space-y-6 scroll-smooth custom-scrollbar">
             {% if not messages %}
@@ -88,6 +120,13 @@
                         <p data-i18n="welcome_judicial">Welcome to your dedicated Judicial Assistant. I have access to
                             your case files and can help
                             you navigate court procedures.</p>
+                        {% if user_cases %}
+                        <p class="mt-3 text-sm text-amber-300">📋 <strong>Select a case above</strong> to get
+                            personalized, case-specific guidance from the AI.</p>
+                        {% else %}
+                        <p class="mt-3 text-sm text-slate-400">You don't have any cases yet. <a href="/judicial/intake"
+                                class="text-amber-400 underline">Register a case</a> to get started.</p>
+                        {% endif %}
                         <p class="mt-2 text-sm text-slate-400" data-i18n="ask_about">Ask me about:</p>
                         <ul class="list-disc list-inside mt-1 text-sm text-slate-400 space-y-1">
                             <li>Your specific case status and next steps</li>
@@ -319,6 +358,11 @@
             const bodyData = { message: message };
             if (currentSessionId) {
                 bodyData.session_id = currentSessionId;
+            }
+            // Pass selected case_id for focused guidance
+            const caseSelector = document.getElementById('case-selector');
+            if (caseSelector && caseSelector.value) {
+                bodyData.case_id = parseInt(caseSelector.value);
             }
 
             const response = await fetch('/judicial/chat_session', {

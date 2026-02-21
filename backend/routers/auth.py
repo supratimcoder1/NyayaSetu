@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Response, Request
+from fastapi.responses import RedirectResponse
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from .. import schemas, models, database, auth
@@ -48,6 +49,7 @@ def login_for_access_token(response: Response, request: Request, form_data: OAut
         key="access_token",
         value=access_token,
         httponly=True,
+        samesite="lax",
         max_age=auth.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
         expires=auth.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
     )
@@ -67,11 +69,31 @@ async def update_language(language_update: schemas.LanguageUpdate, user: models.
     db.commit()
     return {"message": "Language updated successfully", "language": user.preferred_language}
 
-from fastapi.responses import RedirectResponse
-
 @router.post("/logout")
 async def logout(response: Response):
     """Clears the httponly access_token cookie and redirects to login."""
     redirect = RedirectResponse(url="/login", status_code=303)
     redirect.delete_cookie(key="access_token", path="/")
     return redirect
+
+@router.delete("/admin/users/{user_id}")
+async def delete_user(user_id: int, current_admin: models.User = Depends(auth.get_current_user_from_cookie), db: Session = Depends(database.get_db)):
+    """Admin endpoint to permanently delete a user and their associated data."""
+    if not current_admin:
+         raise HTTPException(status_code=401, detail="Not authenticated")
+    if current_admin.role != "admin":
+         raise HTTPException(status_code=403, detail="Not authorized. Admin access required.")
+    
+    if current_admin.id == user_id:
+         raise HTTPException(status_code=400, detail="Cannot delete your own admin account.")
+         
+    user_to_delete = db.query(models.User).filter(models.User.id == user_id).first()
+    if not user_to_delete:
+         raise HTTPException(status_code=404, detail="User not found")
+         
+    # SQLAlchemy relationships will handle cascading deletes if configured,
+    # otherwise we might need to manually delete sessions/cases.
+    # Our models are set to cascade="all, delete-orphan", so this is safe.
+    db.delete(user_to_delete)
+    db.commit()
+    return {"message": f"User #{user_id} deleted successfully"}
